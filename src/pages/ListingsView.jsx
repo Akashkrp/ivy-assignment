@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, SlidersHorizontal, ArrowUpDown, ShieldCheck, 
   Sparkles, AlertTriangle, Filter, RotateCcw, ChevronLeft, ChevronRight,
-  Home, MapPin, Building2
+  Home, MapPin, Building2, Lock, ArrowRight, Phone
 } from 'lucide-react';
 import { API, ASSIGNED_LOCALITY, CITY } from '../services/api';
 import ListingCard from '../components/ListingCard';
@@ -27,7 +27,7 @@ const FURNISHING_OPTIONS = [
 
 const ITEMS_PER_PAGE = 24;
 
-export default function ListingsView({ savedListings = [], onToggleSave }) {
+export default function ListingsView({ user, onOpenLogin, savedListings = [], onToggleSave }) {
   const [allListings, setAllListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -131,6 +131,8 @@ export default function ListingsView({ savedListings = [], onToggleSave }) {
     currentPage * ITEMS_PER_PAGE
   );
 
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
+
   const resetFilters = () => {
     setSearch('');
     setLocality('all');
@@ -145,320 +147,551 @@ export default function ListingsView({ savedListings = [], onToggleSave }) {
     setPage(1);
   };
 
+  const activeExtraFilterCount = [
+    propType !== 'all',
+    furnishing !== 'all',
+    minPrice !== '',
+    maxPrice !== '',
+    !activeOnly,
+    !hideAnomalies,
+  ].filter(Boolean).length;
+
   return (
     <div className="min-h-screen pb-16">
       
-      {/* Hero Header & Quick Stats */}
-      <section className="bg-gradient-to-b from-slate-900 via-slate-900/60 to-slate-950 border-b border-slate-800/80 pt-10 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-3">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Verified City Dataset · {CITY}</span>
-              </div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                Browse Properties in {CITY}
-              </h1>
-              <p className="mt-2 text-sm text-slate-400 max-w-2xl leading-relaxed">
-                Explore real estate listings across verified builder societies. Powered by dual-layer client filtering to correct server query discrepancies.
-              </p>
-            </div>
-
-            {/* Quick Metrics Cards */}
-            <div className="flex flex-wrap gap-3">
-              <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-3.5 min-w-[130px]">
-                <div className="text-[11px] font-semibold text-slate-400">Total Retrievable</div>
-                <div className="text-xl font-extrabold text-white mt-0.5">4,700</div>
-                <div className="text-[10px] text-emerald-400">Full Dataset Ingested</div>
-              </div>
-
-              <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-3.5 min-w-[130px]">
-                <div className="text-[11px] font-semibold text-slate-400">Active Live Units</div>
-                <div className="text-xl font-extrabold text-emerald-400 mt-0.5">3,722</div>
-                <div className="text-[10px] text-slate-500">978 Off-Market Filtered</div>
-              </div>
-
-              <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-3.5 min-w-[130px]">
-                <div className="text-[11px] font-semibold text-slate-400">Unique Properties</div>
-                <div className="text-xl font-extrabold text-cyan-400 mt-0.5">4,182</div>
-                <div className="text-[10px] text-slate-500">Cross-portal Deduplicated</div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Search Bar */}
-          <div className="mt-8 relative max-w-3xl">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500">
-              <Search className="w-5 h-5" />
-            </div>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              placeholder="Search apartment name, locality (e.g. Bellandur, Whitefield), or Listing ID..."
-              className="w-full pl-12 pr-4 py-3.5 bg-slate-950 border border-slate-700/70 rounded-2xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 shadow-xl shadow-slate-950/50 transition-all"
+      {/* Authentic Ivy Homes Hero Banner in Sleek Dark Theme */}
+      <section className="pt-6 pb-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-800 bg-slate-900 min-h-[360px] sm:min-h-[400px] flex items-center">
+          {/* Photographic Background with Seamless Dark Gradient Overlay */}
+          <div className="absolute inset-0 z-0">
+            <img 
+              src="/hero-family.jpg" 
+              alt="Happy couple moving into their new home" 
+              className="w-full h-full object-cover object-center opacity-35 filter contrast-110 brightness-90"
             />
-            {search && (
-              <button 
-                onClick={() => setSearch('')} 
-                className="absolute inset-y-0 right-0 pr-4 flex items-center text-xs text-slate-400 hover:text-slate-200"
-              >
-                Clear
-              </button>
-            )}
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-slate-950/40" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
           </div>
 
+          <div className="relative z-10 p-6 sm:p-10 lg:p-12 max-w-3xl space-y-4">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-300 text-xs font-semibold tracking-wide backdrop-blur-sm">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>
+                {user ? `Signed in as ${user.email}` : 'Bangalore Real Estate Intelligence · Ivy Homes'}
+              </span>
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-[1.15]">
+              Sell your home instantly with{' '}
+              <span className="text-amber-400 font-extrabold inline-block">zero hassle</span>
+            </h1>
+
+            <p className="text-sm sm:text-base text-slate-300 font-normal leading-relaxed max-w-xl">
+              {user 
+                ? 'Ivy Homes verified property marketplace. Browse 3,687 authenticated Bangalore listings across 11 key localities with real-time valuation intelligence.'
+                : 'Ivy Homes buys your home directly and handles everything end to end. We offer guaranteed liquidity, zero brokerage, and cash in hand in 60 days.'
+              }
+            </p>
+
+            {/* Authenticated State: Instant Search Bar */}
+            {user ? (
+              <div className="pt-2 max-w-2xl">
+                <div className="relative flex items-center">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                    <Search className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                    placeholder="Search apartment, society (e.g. Prestige, Sobha), locality (Bellandur)..."
+                    className="w-full pl-12 pr-20 py-3.5 bg-slate-950/90 backdrop-blur-md border border-slate-700/80 rounded-2xl text-sm text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-xl transition-all"
+                  />
+                  {search && (
+                    <button 
+                      onClick={() => setSearch('')} 
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-xs font-semibold text-slate-400 hover:text-white cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* Unauthenticated State: Branding Actions & Demo Account Pills */
+              <div className="pt-2 space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    onClick={() => onOpenLogin?.()}
+                    className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-600/30 transition-all cursor-pointer inline-flex items-center space-x-2 active:scale-95"
+                  >
+                    <span>Sign In to Unlock 3,687 Listings</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                  <span className="text-slate-500 font-medium">1-Click Demo Login:</span>
+                  {['demo1@ivy.homes', 'demo2@ivy.homes', 'demo3@ivy.homes'].map((demo) => (
+                    <button
+                      key={demo}
+                      onClick={() => onOpenLogin?.(demo)}
+                      className="px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-700/80 hover:border-blue-500 text-blue-300 hover:text-white text-[11px] font-mono transition-colors cursor-pointer"
+                    >
+                      {demo}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Proof Metrics Row */}
+            <div className="pt-2 flex flex-wrap items-center gap-4 sm:gap-6 text-xs text-slate-300">
+              <div className="flex items-center space-x-2">
+                <span className="text-base font-black text-white">
+                  {user ? filteredListings.length.toLocaleString() : '3,687'}
+                </span>
+                <span className="text-slate-400">Live Listings</span>
+              </div>
+              <span className="text-slate-700">·</span>
+              <div className="flex items-center space-x-2">
+                <span className="text-base font-black text-blue-400">850+</span>
+                <span className="text-slate-400">Homes Evaluated</span>
+              </div>
+              <span className="text-slate-700">·</span>
+              <div className="flex items-center space-x-2">
+                <span className="text-base font-black text-emerald-400">₹1000 Cr+</span>
+                <span className="text-slate-400">Transaction Value</span>
+              </div>
+              <span className="text-slate-700">·</span>
+              <div className="flex items-center space-x-1.5 text-emerald-400 font-medium">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Zero Brokerage</span>
+              </div>
+            </div>
+
+          </div>
         </div>
       </section>
 
-      {/* Main Content & Filters */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        
-        {/* Filter Controls Bar */}
-        <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 mb-8 shadow-xl shadow-slate-950/30">
+      {/* If NOT authenticated: Show ONLY the Ivy Homes branding, tagline, calculator, and unlock CTA */}
+      {!user ? (
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 mb-16 space-y-12">
           
-          <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-800/80 text-xs text-slate-400">
-            <div className="flex items-center space-x-2 font-semibold text-slate-200">
-              <Filter className="w-4 h-4 text-emerald-400" />
-              <span>Property Filters & Precision Controls</span>
+          {/* Unlock Portal CTA Banner */}
+          <div className="bg-gradient-to-r from-blue-950/60 via-slate-900 to-blue-950/60 border border-blue-800/50 rounded-3xl p-6 sm:p-8 text-center backdrop-blur-md shadow-2xl space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 mx-auto shadow-md">
+              <Lock className="w-6 h-6" />
             </div>
-            <button
-              onClick={resetFilters}
-              className="flex items-center space-x-1.5 text-slate-400 hover:text-emerald-400 transition-colors"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset All</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
-            {/* Locality Dropdown */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5">
-                Locality
-              </label>
-              <select
-                value={locality}
-                onChange={(e) => { setLocality(e.target.value); setPage(1); }}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white capitalize focus:outline-none focus:border-emerald-500 transition-colors"
+            <div className="space-y-1.5">
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                Bangalore Property Marketplace Locked
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto leading-relaxed">
+                Directly explore 3,687 verified live properties across 11 Bangalore localities with dual-layer client filtering and real-time valuations.
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                onClick={onOpenLogin}
+                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-600/30 transition-all cursor-pointer inline-flex items-center justify-center space-x-2 active:scale-95"
               >
-                {LOCALITIES.map((loc) => (
-                  <option key={loc} value={loc}>
-                    {loc === 'all' ? 'All Localities' : loc}
-                    {loc === ASSIGNED_LOCALITY ? ' (Assigned)' : ''}
-                  </option>
-                ))}
-              </select>
+                <span>Sign In With Demo Account to Unlock Feed</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
 
-            {/* Bedrooms (BHK) */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5">
-                Bedrooms (BHK)
-              </label>
-              <select
-                value={bhk}
-                onChange={(e) => { setBhk(e.target.value); setPage(1); }}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
-              >
-                {BHK_OPTIONS.map((b) => (
-                  <option key={b} value={b}>
-                    {b === 'all' ? 'Any Bedrooms' : `${b} BHK`}
-                  </option>
-                ))}
-              </select>
+            <div className="pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-400">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>Pre-configured credentials:</span>
+              <span className="font-mono text-blue-300">demo1@ivy.homes</span>
+              <span>·</span>
+              <span className="font-mono text-blue-300">demo2@ivy.homes</span>
+              <span>·</span>
+              <span className="font-mono text-blue-300">demo3@ivy.homes</span>
             </div>
-
-            {/* Min Price */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5">
-                Min Price (INR)
-              </label>
-              <input
-                type="number"
-                value={minPrice}
-                onChange={(e) => { setMinPrice(e.target.value); setPage(1); }}
-                placeholder="e.g. 5000000"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
-              />
-            </div>
-
-            {/* Max Price */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5">
-                Max Price (INR)
-              </label>
-              <input
-                type="number"
-                value={maxPrice}
-                onChange={(e) => { setMaxPrice(e.target.value); setPage(1); }}
-                placeholder="e.g. 20000000"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
-              />
-            </div>
-
-            {/* Property Type */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5">
-                Property Type
-              </label>
-              <select
-                value={propType}
-                onChange={(e) => { setPropType(e.target.value); setPage(1); }}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white capitalize focus:outline-none focus:border-emerald-500 transition-colors"
-              >
-                {PROPERTY_TYPES.map((pt) => (
-                  <option key={pt} value={pt}>
-                    {pt === 'all' ? 'All Types' : pt}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Furnishing */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5">
-                Furnishing
-              </label>
-              <select
-                value={furnishing}
-                onChange={(e) => { setFurnishing(e.target.value); setPage(1); }}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white capitalize focus:outline-none focus:border-emerald-500 transition-colors"
-              >
-                {FURNISHING_OPTIONS.map((f) => (
-                  <option key={f} value={f}>
-                    {f === 'all' ? 'Any Furnishing' : f}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Sort Order */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5">
-                Sort Results
-              </label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
-              >
-                <option value="posted_desc">Recently Posted</option>
-                <option value="price_asc">Price: Low to High</option>
-                <option value="price_desc">Price: High to Low</option>
-                <option value="area_desc">Carpet Area: Largest First</option>
-              </select>
-            </div>
-
-            {/* Toggles (Active Only & Hide Anomalies) */}
-            <div className="flex flex-col justify-end space-y-2 pt-1">
-              <label className="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={activeOnly}
-                  onChange={(e) => { setActiveOnly(e.target.checked); setPage(1); }}
-                  className="rounded border-slate-700 bg-slate-950 text-emerald-500 focus:ring-emerald-500"
-                />
-                <span className="font-medium">Live / Active Only</span>
-              </label>
-
-              <label className="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={hideAnomalies}
-                  onChange={(e) => { setHideAnomalies(e.target.checked); setPage(1); }}
-                  className="rounded border-slate-700 bg-slate-950 text-emerald-500 focus:ring-emerald-500"
-                />
-                <span className="font-medium">Hide Corrupt & Fake Listings</span>
-              </label>
-            </div>
-
           </div>
 
-        </div>
+          {/* Slogan & Cost of Waiting 1 Year Section */}
+          <section className="text-center space-y-6">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider">
+              <span>WHY SELL TO US</span>
+            </div>
 
-        {/* Results Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="text-sm text-slate-400 font-medium">
-            Showing <span className="font-bold text-white">{sortedListings.length}</span> matching properties
-            {hideAnomalies && ' (excluding corrupt/fake records)'}
-          </div>
-          <div className="text-xs text-slate-500 font-medium">
-            Page {currentPage} of {totalPages}
-          </div>
-        </div>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+              Every month unsold is <span className="text-blue-400">a cost you are absorbing.</span>
+            </h2>
 
-        {/* Listings Grid with Skeleton Loading */}
-        {loading ? (
-          <PropertySkeleton count={12} />
-        ) : pagedListings.length === 0 ? (
-          <div className="text-center py-20 bg-slate-900/40 rounded-3xl border border-slate-800/80 p-8">
-            <Home className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <h3 className="text-lg font-bold text-slate-200">No properties matched your criteria</h3>
-            <p className="text-sm text-slate-400 mt-1 max-w-md mx-auto">
-              Try clearing filters or search terms to broaden your results.
+            <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
+              Most sellers think about price. Few count what waiting actually costs. Here is what one year on the open market looks like for a typical 2 BHK in Bangalore.
             </p>
-            <button
-              onClick={resetFilters}
-              className="mt-5 px-4 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-semibold text-xs border border-emerald-500/30 transition-colors"
-            >
-              Reset Filters
-            </button>
-          </div>
-        ) : (
-          <motion.div 
-            layout
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-          >
-            <AnimatePresence mode="popLayout">
-              {pagedListings.map((listing) => (
-                <ListingCard
-                  key={listing.listing_id}
-                  listing={listing}
-                  isSaved={savedListings.includes(listing.listing_id)}
-                  onToggleSave={onToggleSave}
-                />
-              ))}
-            </AnimatePresence>
-          </motion.div>
-        )}
 
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="mt-12 flex items-center justify-center space-x-2">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 300, behavior: 'smooth' }); }}
-              disabled={currentPage === 1}
-              className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </motion.button>
+            {/* Bangalore Cost of Waiting Calculator Card */}
+            <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 text-left shadow-xl">
+              
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-800">
+                <div className="flex items-center space-x-2">
+                  <span className="px-2.5 py-1 rounded-md bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider">
+                    CALCULATOR
+                  </span>
+                  <span className="text-xs font-semibold text-slate-400">
+                    1 Year · 2 BHK · Typical Bangalore Market Value (₹1.05 Cr)
+                  </span>
+                </div>
+              </div>
 
-            <div className="flex items-center space-x-1 px-3 text-sm font-semibold">
-              <span className="text-emerald-400">{currentPage}</span>
-              <span className="text-slate-600">/</span>
-              <span className="text-slate-400">{totalPages}</span>
+              <div className="mt-5 mb-2">
+                <h3 className="text-base sm:text-lg font-bold text-white">The hidden cost of waiting 1 year</h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  These are the actual carrying costs a seller absorbs while waiting for the right buyer to show up.
+                </p>
+              </div>
+
+              {/* Table / Cost Breakdown */}
+              <div className="mt-4 space-y-3 bg-slate-950/80 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-inner text-slate-200">
+                
+                <div className="flex items-center justify-between py-2 border-b border-slate-800/80 text-xs sm:text-sm">
+                  <div>
+                    <div className="font-semibold text-white">Maintenance charges</div>
+                    <div className="text-[11px] text-slate-500">Avg ₹8,000/mo × 12 months</div>
+                  </div>
+                  <div className="font-bold text-white font-mono">₹97,000</div>
+                </div>
+
+                <div className="flex items-center justify-between py-2 border-b border-slate-800/80 text-xs sm:text-sm">
+                  <div>
+                    <div className="font-semibold text-white">Lost rental income</div>
+                    <div className="text-[11px] text-slate-500">Unoccupied property × 12 months @ ₹35,000/mo</div>
+                  </div>
+                  <div className="font-bold text-white font-mono">₹4,20,000</div>
+                </div>
+
+                <div className="flex items-center justify-between py-2 border-b border-slate-800/80 text-xs sm:text-sm">
+                  <div>
+                    <div className="font-semibold text-white">Broker fee on eventual sale</div>
+                    <div className="text-[11px] text-slate-500">Standard 2% brokerage on sale price</div>
+                  </div>
+                  <div className="font-bold text-white font-mono">₹2,10,000</div>
+                </div>
+
+                <div className="flex items-center justify-between py-2 border-b border-slate-800/80 text-xs sm:text-sm">
+                  <div>
+                    <div className="font-semibold text-white">Price risk</div>
+                    <div className="text-[11px] text-slate-500">Market corrections & aggressive buyer negotiations</div>
+                  </div>
+                  <div className="font-semibold text-amber-400 text-xs">Uncertain</div>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 text-sm sm:text-base">
+                  <div>
+                    <div className="font-black text-white">Total estimated cost of waiting 1 year</div>
+                    <div className="text-[11px] text-slate-500">Includes direct carrying costs & brokerage fees</div>
+                  </div>
+                  <div className="text-xl sm:text-2xl font-black text-blue-400 font-sans">₹7.8 L+</div>
+                </div>
+
+              </div>
+
+              {/* Bottom Guarantee Badges */}
+              <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-center">
+                  <div className="text-base font-black text-blue-400">₹0</div>
+                  <div className="text-[11px] font-semibold text-slate-400 mt-0.5">In hidden fees</div>
+                </div>
+
+                <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-center">
+                  <div className="text-base font-black text-blue-400">₹0</div>
+                  <div className="text-[11px] font-semibold text-slate-400 mt-0.5">Broker commission</div>
+                </div>
+
+                <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-center">
+                  <div className="text-base font-black text-blue-400">60 Days</div>
+                  <div className="text-[11px] font-semibold text-slate-400 mt-0.5">Cash in hand</div>
+                </div>
+              </div>
+
+              <div className="mt-4 p-3 bg-blue-950/40 border border-blue-800/40 rounded-xl text-xs text-blue-300 leading-relaxed">
+                💡 <strong>Ivy Insight:</strong> The money saved by not waiting is often greater than any minor price variation between open-market speculation and our guaranteed instant offer.
+              </div>
+
             </div>
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 300, behavior: 'smooth' }); }}
-              disabled={currentPage === totalPages}
-              className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </motion.button>
-          </div>
-        )}
+          </section>
 
-      </div>
+        </div>
+      ) : (
+        /* If Authenticated: Show Full Interactive Marketplace, Filters, & Property Feed */
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+          
+          {/* Decluttered Filter Controls Bar */}
+          <div className="bg-slate-900/80 border border-slate-800/90 rounded-3xl p-4 sm:p-5 mb-8 shadow-xl shadow-slate-950/20">
+            
+            {/* Quick Primary Filters Row */}
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+              
+              {/* Locality Selector */}
+              <div className="flex items-center space-x-2 min-w-[200px]">
+                <MapPin className="w-4 h-4 text-blue-400 shrink-0" />
+                <select
+                  value={locality}
+                  onChange={(e) => { setLocality(e.target.value); setPage(1); }}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs sm:text-sm text-white capitalize focus:outline-none focus:border-blue-500 cursor-pointer"
+                >
+                  {LOCALITIES.map((loc) => (
+                    <option key={loc} value={loc}>
+                      {loc === 'all' ? 'All Localities' : loc}
+                      {loc === ASSIGNED_LOCALITY ? ' ★ Assigned' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* BHK Pills */}
+              <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
+                <span className="text-xs font-semibold text-slate-400 mr-1 hidden sm:inline">Bedrooms:</span>
+                {BHK_OPTIONS.map((b) => {
+                  const isSelected = bhk === b;
+                  return (
+                    <button
+                      key={b}
+                      onClick={() => { setBhk(b); setPage(1); }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                        isSelected
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                          : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      {b === 'all' ? 'Any BHK' : `${b} BHK`}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Sort Dropdown & More Filters Button */}
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1.5">
+                  <ArrowUpDown className="w-4 h-4 text-slate-500 shrink-0" />
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-blue-500 cursor-pointer"
+                  >
+                    <option value="posted_desc">Newest First</option>
+                    <option value="price_asc">Price: Low to High</option>
+                    <option value="price_desc">Price: High to Low</option>
+                    <option value="area_desc">Largest Area</option>
+                  </select>
+                </div>
+
+                <button
+                  onClick={() => setShowMoreFilters(!showMoreFilters)}
+                  className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer border ${
+                    showMoreFilters || activeExtraFilterCount > 0
+                      ? 'bg-blue-600/20 border-blue-500 text-blue-300'
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                  <span>Filters</span>
+                  {activeExtraFilterCount > 0 && (
+                    <span className="w-4 h-4 rounded-full bg-blue-500 text-white text-[10px] flex items-center justify-center font-bold">
+                      {activeExtraFilterCount}
+                    </span>
+                  )}
+                </button>
+
+                {(search || locality !== 'all' || bhk !== 'all' || activeExtraFilterCount > 0) && (
+                  <button
+                    onClick={resetFilters}
+                    title="Reset all filters"
+                    className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+            </div>
+
+            {/* Expandable Advanced Filters Drawer */}
+            <AnimatePresence>
+              {showMoreFilters && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden pt-4 mt-4 border-t border-slate-800/80"
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                        Property Type
+                      </label>
+                      <select
+                        value={propType}
+                        onChange={(e) => { setPropType(e.target.value); setPage(1); }}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white capitalize focus:outline-none focus:border-blue-500 cursor-pointer"
+                      >
+                        {PROPERTY_TYPES.map((pt) => (
+                          <option key={pt} value={pt}>
+                            {pt === 'all' ? 'All Types' : pt}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                        Furnishing
+                      </label>
+                      <select
+                        value={furnishing}
+                        onChange={(e) => { setFurnishing(e.target.value); setPage(1); }}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white capitalize focus:outline-none focus:border-blue-500 cursor-pointer"
+                      >
+                        {FURNISHING_OPTIONS.map((f) => (
+                          <option key={f} value={f}>
+                            {f === 'all' ? 'Any Furnishing' : f}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                        Min Price (₹)
+                      </label>
+                      <input
+                        type="number"
+                        value={minPrice}
+                        onChange={(e) => { setMinPrice(e.target.value); setPage(1); }}
+                        placeholder="e.g. 5000000"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                        Max Price (₹)
+                      </label>
+                      <input
+                        type="number"
+                        value={maxPrice}
+                        onChange={(e) => { setMaxPrice(e.target.value); setPage(1); }}
+                        placeholder="e.g. 20000000"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4 mt-4 pt-3 border-t border-slate-800/50 text-xs">
+                    <label className="flex items-center space-x-2 text-slate-300 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={activeOnly}
+                        onChange={(e) => { setActiveOnly(e.target.checked); setPage(1); }}
+                        className="rounded border-slate-700 text-blue-600 focus:ring-blue-500 bg-slate-950"
+                      />
+                      <span>Live Properties Only</span>
+                    </label>
+
+                    <label className="flex items-center space-x-2 text-slate-300 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={hideAnomalies}
+                        onChange={(e) => { setHideAnomalies(e.target.checked); setPage(1); }}
+                        className="rounded border-slate-700 text-blue-600 focus:ring-blue-500 bg-slate-950"
+                      />
+                      <span>Filter Corrupt Data & Enquiry Bait Listings</span>
+                    </label>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+          </div>
+
+          {/* Results Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="text-sm text-slate-400 font-medium">
+              Showing <span className="font-bold text-white">{sortedListings.length}</span> matching properties
+              {hideAnomalies && ' (excluding corrupt/fake records)'}
+            </div>
+            <div className="text-xs text-slate-500 font-medium">
+              Page {currentPage} of {totalPages}
+            </div>
+          </div>
+
+          {/* Listings Grid with Skeleton Loading */}
+          {loading ? (
+            <PropertySkeleton count={12} />
+          ) : pagedListings.length === 0 ? (
+            <div className="text-center py-20 bg-slate-900/40 rounded-3xl border border-slate-800/80 p-8">
+              <Home className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+              <h3 className="text-lg font-bold text-slate-200">No properties matched your criteria</h3>
+              <p className="text-sm text-slate-400 mt-1 max-w-md mx-auto">
+                Try clearing filters or search terms to broaden your results.
+              </p>
+              <button
+                onClick={resetFilters}
+                className="mt-5 px-4 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 font-semibold text-xs border border-blue-500/30 transition-colors"
+              >
+                Reset Filters
+              </button>
+            </div>
+          ) : (
+            <motion.div 
+              layout
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            >
+              <AnimatePresence mode="popLayout">
+                {pagedListings.map((listing) => (
+                  <ListingCard
+                    key={listing.listing_id}
+                    listing={listing}
+                    isSaved={savedListings.includes(listing.listing_id)}
+                    onToggleSave={onToggleSave}
+                  />
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          )}
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="mt-12 flex items-center justify-center space-x-2">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 300, behavior: 'smooth' }); }}
+                disabled={currentPage === 1}
+                className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </motion.button>
+
+              <div className="flex items-center space-x-1 px-3 text-sm font-semibold">
+                <span className="text-blue-400">{currentPage}</span>
+                <span className="text-slate-600">/</span>
+                <span className="text-slate-400">{totalPages}</span>
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 300, behavior: 'smooth' }); }}
+                disabled={currentPage === totalPages}
+                className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </motion.button>
+            </div>
+          )}
+
+        </div>
+      )}
 
     </div>
   );

@@ -102,45 +102,34 @@ export default function ListingCard({ listing, isSaved, onToggleSave }) {
               style={{ transform: 'translateZ(25px)' }}
               className="flex flex-col items-center justify-center text-center z-10"
             >
-              <Building className="w-10 h-10 text-slate-700 group-hover:text-emerald-400 group-hover:scale-110 transition-all duration-300 mb-2" />
-              <span className="text-xs font-semibold text-slate-400 group-hover:text-slate-200 transition-colors line-clamp-1">
+              <Building className="w-10 h-10 text-slate-600 group-hover:text-blue-400 group-hover:scale-110 transition-all duration-300 mb-2" />
+              <span className="text-xs font-semibold text-slate-300 group-hover:text-white transition-colors line-clamp-1">
                 {listing.apartment_name || 'Prime Property'}
               </span>
-              <span className="text-[10px] text-slate-500 capitalize">
+              <span className="text-[10px] text-slate-400 capitalize">
                 {listing.property_type || 'Apartment'}
               </span>
             </div>
 
-            {/* Badges Overlay */}
+            {/* Badges Overlay - Clean & Minimal */}
             <div 
               style={{ transform: 'translateZ(30px)' }}
-              className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-20"
+              className="absolute top-3 left-3 flex items-center gap-1.5 z-20"
             >
-              {/* Website portal */}
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border ${PORTAL_COLORS[listing.website] || 'text-slate-300 bg-slate-800'}`}>
+              <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider uppercase border backdrop-blur-sm ${PORTAL_COLORS[listing.website] || 'text-slate-300 bg-slate-800/90'}`}>
                 {listing.website}
               </span>
 
-              {/* Inactive tag if not live */}
               {!listing.is_live && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800/90 text-slate-400 border border-slate-700">
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-900/90 text-slate-400 border border-slate-700 backdrop-blur-sm">
                   Off-Market
                 </span>
               )}
 
-              {/* Corrupt tag */}
-              {listing.is_corrupt && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center space-x-1">
-                  <ShieldAlert className="w-3 h-3 text-rose-400" />
-                  <span>Corrupt Data</span>
-                </span>
-              )}
-
-              {/* Fake tag */}
-              {listing.is_fake && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center space-x-1">
-                  <Flame className="w-3 h-3 text-amber-400" />
-                  <span>Enquiry Bait</span>
+              {(listing.is_corrupt || listing.is_fake) && (
+                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center space-x-1 backdrop-blur-sm">
+                  <ShieldAlert className="w-3 h-3 text-amber-400" />
+                  <span>Flagged</span>
                 </span>
               )}
             </div>
@@ -156,7 +145,7 @@ export default function ListingCard({ listing, isSaved, onToggleSave }) {
               className={`absolute top-3 right-3 z-20 p-2.5 rounded-full backdrop-blur-md transition-colors cursor-pointer ${
                 isSaved 
                   ? 'bg-rose-500 text-white shadow-md shadow-rose-500/40' 
-                  : 'bg-slate-950/60 text-slate-300 hover:text-rose-400 hover:bg-slate-900 border border-slate-700/60'
+                  : 'bg-slate-950/70 text-slate-300 hover:text-rose-400 hover:bg-slate-900 border border-slate-700/60'
               }`}
             >
               <Heart className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
@@ -165,7 +154,7 @@ export default function ListingCard({ listing, isSaved, onToggleSave }) {
             {/* Price Overlay Bar with 3D Pop */}
             <div 
               style={{ transform: 'translateZ(20px)' }}
-              className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-slate-950 via-slate-950/85 to-transparent flex items-baseline justify-between z-10"
+              className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-slate-950 via-slate-950/90 to-transparent flex items-baseline justify-between z-10"
             >
               <div>
                 <div className="text-lg font-black text-white tracking-tight">
@@ -183,7 +172,7 @@ export default function ListingCard({ listing, isSaved, onToggleSave }) {
               </div>
               
               {listing.is_area_converted && (
-                <span className="text-[10px] text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-1.5 py-0.5 rounded font-mono" title="Converted from square meters to square feet (x10.7639)">
+                <span className="text-[10px] text-blue-300 bg-blue-500/20 border border-blue-500/30 px-1.5 py-0.5 rounded font-mono" title="Converted to square feet">
                   m² → ft²
                 </span>
               )}
@@ -194,44 +183,44 @@ export default function ListingCard({ listing, isSaved, onToggleSave }) {
         {/* Property Details Body */}
         <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
           <div>
-            {/* Locality & Apartment Title */}
+            {/* Locality & City */}
             <div className="flex items-center space-x-1.5 text-xs text-slate-400 mb-1">
-              <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <MapPin className="w-3.5 h-3.5 text-blue-400 shrink-0" />
               <span className="capitalize font-semibold text-slate-300">{listing.locality}</span>
               <span>·</span>
               <span className="text-slate-500 truncate">{listing.city_id === 1 ? 'Bangalore' : 'City'}</span>
             </div>
 
             <Link to={`/listings/${listing.listing_id}`}>
-              <h3 className="text-sm font-bold text-slate-100 group-hover:text-emerald-400 transition-colors line-clamp-1">
+              <h3 className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors line-clamp-1">
                 {listing.bedroom ? `${listing.bedroom} BHK ` : ''}
                 {listing.apartment_name || 'Residential Property'}
               </h3>
             </Link>
 
-            {/* Key Specs Pills */}
+            {/* Key Specs Row */}
             <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-800/80 text-xs text-slate-300">
               <div className="flex items-center space-x-1.5" title="Bedrooms">
-                <BedDouble className="w-3.5 h-3.5 text-slate-500" />
-                <span>{listing.bedroom ?? '-'} BHK</span>
+                <BedDouble className="w-3.5 h-3.5 text-slate-400" />
+                <span className="font-semibold">{listing.bedroom ?? '-'} BHK</span>
               </div>
               
               <div className="flex items-center space-x-1.5" title="Bathrooms">
-                <Bath className="w-3.5 h-3.5 text-slate-500" />
+                <Bath className="w-3.5 h-3.5 text-slate-400" />
                 <span>{listing.bathroom ?? '-'} Baths</span>
               </div>
 
-              <div className="flex items-center space-x-1.5" title="Carpet Area in sqft">
-                <Maximize2 className="w-3.5 h-3.5 text-slate-500" />
+              <div className="flex items-center space-x-1.5" title="Carpet Area">
+                <Maximize2 className="w-3.5 h-3.5 text-slate-400" />
                 <span>{listing.carpet_area ? `${listing.carpet_area} sqft` : '-'}</span>
               </div>
             </div>
           </div>
 
           {/* Card Footer */}
-          <div className="pt-2 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-800/50">
+          <div className="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-800/60">
             <div className="flex items-center space-x-1">
-              <span className="capitalize text-slate-400">{listing.furnishing || 'Unfurnished'}</span>
+              <span className="capitalize">{listing.furnishing || 'Unfurnished'}</span>
               {listing.facing_direction && (
                 <>
                   <span>·</span>
@@ -242,9 +231,9 @@ export default function ListingCard({ listing, isSaved, onToggleSave }) {
 
             <Link 
               to={`/listings/${listing.listing_id}`} 
-              className="text-emerald-400 hover:text-emerald-300 font-semibold flex items-center space-x-1 transition-colors"
+              className="text-blue-400 hover:text-blue-300 font-bold flex items-center space-x-1 transition-colors"
             >
-              <span>View</span>
+              <span>Details</span>
               <ExternalLink className="w-3 h-3" />
             </Link>
           </div>

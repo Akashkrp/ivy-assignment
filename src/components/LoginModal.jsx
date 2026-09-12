@@ -8,12 +8,16 @@ import { Auth, DEMO_USERS, DEMO_PASSWORD } from '../services/api';
 import ThreeLoginScene from './ThreeLoginScene';
 import CustomCursor from './CustomCursor';
 
-export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
-  const [email, setEmail] = useState('demo1@ivy.homes');
+export default function LoginModal({ isOpen, onClose, onLoginSuccess, initialEmail = 'demo1@ivy.homes' }) {
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState(DEMO_PASSWORD);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successData, setSuccessData] = useState(null);
+
+  React.useEffect(() => {
+    if (initialEmail) setEmail(initialEmail);
+  }, [initialEmail, isOpen]);
 
   // 3D Card Tilt Controls
   const cardRef = useRef(null);
@@ -113,12 +117,12 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
               y: 20, 
               transition: { duration: 0.22 } 
             }}
-            className="relative w-full max-w-md bg-gradient-to-b from-slate-900/90 via-slate-900/95 to-slate-950/95 border border-slate-700/80 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-emerald-950/60 z-10 backdrop-blur-2xl transition-shadow duration-300 hover:shadow-emerald-500/20"
+            className="relative w-full max-w-md bg-gradient-to-b from-slate-900/95 via-slate-900/95 to-slate-950/98 border border-slate-700/80 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-blue-950/60 z-10 backdrop-blur-2xl transition-shadow duration-300 hover:shadow-blue-500/20"
           >
             {/* Dynamic Specular Sheen Layer reacting to 3D tilt */}
             <motion.div
               style={{
-                background: `radial-gradient(circle at ${glareX} ${glareY}, rgba(52, 211, 153, 0.18), transparent 70%)`,
+                background: `radial-gradient(circle at ${glareX} ${glareY}, rgba(59, 130, 246, 0.22), transparent 70%)`,
               }}
               className="absolute inset-0 rounded-3xl pointer-events-none"
             />
@@ -129,7 +133,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
               whileHover={{ scale: 1.15, rotate: 90 }}
               whileTap={{ scale: 0.9 }}
               onClick={onClose}
-              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors z-20"
+              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors z-20 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </motion.button>
@@ -139,17 +143,17 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
               style={{ transform: 'translateZ(40px)' }} 
               className="flex items-center space-x-3.5 mb-6"
             >
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/20">
+              <div className="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 shadow-lg shadow-blue-500/20">
                 <Lock className="w-6 h-6" />
               </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <h2 className="text-xl font-black text-white tracking-tight">Demo User Login</h2>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <h2 className="text-xl font-black text-white tracking-tight">Ivy Homes Login</h2>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/30">
                     3D Auth
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">Direct JWT verification against Ivy API</p>
+                <p className="text-xs text-slate-400 mt-0.5">Direct JWT verification against Ivy Homes API</p>
               </div>
             </div>
 
@@ -176,14 +180,14 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                       whileHover={{ scale: 1.05, y: -2 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleSelectDemo(u.email)}
-                      className={`py-2 px-2.5 rounded-xl text-xs font-medium text-center transition-all border ${
+                      className={`py-2 px-2.5 rounded-xl text-xs font-medium text-center transition-all border cursor-pointer ${
                         isSelected
-                          ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 shadow-md shadow-emerald-500/25'
+                          ? 'bg-blue-600/25 border-blue-500 text-blue-200 shadow-md shadow-blue-500/25'
                           : 'bg-slate-900/90 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
                       }`}
                     >
                       <div className="font-bold capitalize">{name}</div>
-                      <div className="text-[10px] opacity-75">{u.role.split(' ')[0]}</div>
+                      <div className="text-[10px] opacity-75">{u.label}</div>
                     </motion.button>
                   );
                 })}
@@ -205,7 +209,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950/90 border border-slate-800 focus:border-emerald-500 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all shadow-inner"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950/90 border border-slate-800 focus:border-blue-500 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all shadow-inner"
                     placeholder="name@ivy.homes"
                   />
                 </div>
@@ -224,7 +228,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950/90 border border-slate-800 focus:border-emerald-500 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all shadow-inner"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950/90 border border-slate-800 focus:border-blue-500 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all shadow-inner"
                     placeholder="Key password"
                   />
                 </div>
@@ -261,7 +265,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                   whileTap={{ scale: 0.98, y: 1 }}
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-sm shadow-xl shadow-emerald-500/30 transition-all disabled:opacity-50 cursor-pointer"
+                  className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-sm shadow-xl shadow-blue-600/30 transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? (
                     <>

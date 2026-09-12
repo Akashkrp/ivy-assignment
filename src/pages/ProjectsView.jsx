@@ -6,10 +6,26 @@ import {
 } from 'lucide-react';
 import { API, formatINR, formatCrores, CITY } from '../services/api';
 import PropertySkeleton from '../components/PropertySkeleton';
+import AuthGate from '../components/AuthGate';
+import ProjectDetailModal from '../components/ProjectDetailModal';
 
 const ITEMS_PER_PAGE = 18;
 
-export default function ProjectsView() {
+export default function ProjectsView({ user, onOpenLogin }) {
+  if (!user) {
+    return (
+      <div className="min-h-screen pb-20 pt-8">
+        <AuthGate
+          title="Bangalore Developer Projects Locked"
+          subtitle="Upcoming & Ongoing Developments"
+          description="Sign in with an Ivy Homes demo account to explore developer projects, verified construction statuses, price bands, and unit inventory analytics."
+          icon={Building2}
+          onOpenLogin={onOpenLogin}
+        />
+      </div>
+    );
+  }
+
   const [projects, setProjects] = useState([]);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,6 +33,7 @@ export default function ProjectsView() {
   const [locality, setLocality] = useState('all');
   const [status, setStatus] = useState('all');
   const [page, setPage] = useState(1);
+  const [selectedProject, setSelectedProject] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -149,13 +166,13 @@ export default function ProjectsView() {
             <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4">
               <div className="text-xs text-slate-400 font-semibold">Total Projects</div>
               <div className="text-2xl font-extrabold text-white mt-1">{projects.length}</div>
-              <div className="text-[10px] text-slate-500">Documented: 476 (Lie)</div>
+              <div className="text-[10px] text-slate-500">API Documented: 476</div>
             </div>
 
             <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4">
-              <div className="text-xs text-slate-400 font-semibold">Wrong Listing Counts</div>
+              <div className="text-xs text-slate-400 font-semibold">Inventory Discrepancies</div>
               <div className="text-2xl font-extrabold text-amber-400 mt-1">{wrongCount}</div>
-              <div className="text-[10px] text-slate-500">Q10: Disagree with API inventory</div>
+              <div className="text-[10px] text-slate-500">Audited vs live market inventory</div>
             </div>
 
             <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4">
@@ -256,7 +273,8 @@ export default function ProjectsView() {
                     exit={{ opacity: 0, scale: 0.96 }}
                     whileHover={{ y: -6, scale: 1.015 }}
                     transition={{ duration: 0.25, ease: 'easeOut' }}
-                    className="bg-slate-900/85 hover:bg-slate-900 border border-slate-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:shadow-emerald-950/30 flex flex-col justify-between will-change-transform"
+                    onClick={() => setSelectedProject(p)}
+                    className="bg-slate-900/85 hover:bg-slate-900 border border-slate-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:shadow-emerald-950/30 flex flex-col justify-between will-change-transform cursor-pointer transition-all group"
                   >
                     <div>
                       {/* Header */}
@@ -265,7 +283,7 @@ export default function ProjectsView() {
                           <span className="text-xs text-emerald-400 font-semibold tracking-wider uppercase">
                             {p.developer_name}
                           </span>
-                          <h3 className="text-lg font-bold text-white leading-snug">
+                          <h3 className="text-lg font-bold text-white leading-snug group-hover:text-emerald-400 transition-colors">
                             {p.apartment_name}
                           </h3>
                         </div>
@@ -315,7 +333,7 @@ export default function ProjectsView() {
                       </div>
                     </div>
 
-                    {/* Discrepancy / Inventory Footnote (Question 10 verification) */}
+                    {/* Discrepancy / Inventory Footnote */}
                     <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
                       <div className="flex items-center space-x-1.5">
                         <span className="text-slate-400 font-medium">Listings:</span>
@@ -323,9 +341,12 @@ export default function ProjectsView() {
                       </div>
 
                       {hasWrongCount ? (
-                        <span className="flex items-center space-x-1 text-[11px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full" title="Project reports wrong total_listings">
+                        <span 
+                          className="flex items-center space-x-1 text-[11px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full" 
+                          title={`API field reports ${p.total_listings}, but active verified listings in database is ${actualLive}.`}
+                        >
                           <AlertCircle className="w-3 h-3" />
-                          <span>Reports {p.total_listings} (Lie)</span>
+                          <span>Reports {p.total_listings} · Live {actualLive}</span>
                         </span>
                       ) : (
                         <span className="flex items-center space-x-1 text-[11px] text-emerald-400">
@@ -370,6 +391,13 @@ export default function ProjectsView() {
         )}
 
       </div>
+
+      {/* Project Detail Modal */}
+      <ProjectDetailModal
+        project={selectedProject}
+        actualLiveCount={selectedProject ? (liveCountByProject[selectedProject.project_id] || 0) : 0}
+        onClose={() => setSelectedProject(null)}
+      />
 
     </div>
   );

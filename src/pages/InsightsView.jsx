@@ -5,6 +5,7 @@ import {
   Clock, Hash, MapPin, Database, Award, ArrowRight, Layers
 } from 'lucide-react';
 import { API, formatCrores, formatINR, ASSIGNED_LOCALITY, CITY } from '../services/api';
+import AuthGate from '../components/AuthGate';
 
 const CATEGORIES = [
   'all', 'auth', 'pagination', 'units', 'filters', 'timestamps',
@@ -27,7 +28,21 @@ const CATEGORY_COLORS = {
   undocumented_endpoint: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
 };
 
-export default function InsightsView() {
+export default function InsightsView({ user, onOpenLogin }) {
+  if (!user) {
+    return (
+      <div className="min-h-screen pb-20 pt-8">
+        <AuthGate
+          title="Market Truth & Algorithmic Insights Locked"
+          subtitle="Data Science & Integrity Audits"
+          description="Sign in with an Ivy Homes demo account to access deep analytical charts, locality price vs area distributions, and verified audit metrics."
+          icon={BarChart3}
+          onOpenLogin={onOpenLogin}
+        />
+      </div>
+    );
+  }
+
   const [submission, setSubmission] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('answers'); // 'answers' or 'lies'

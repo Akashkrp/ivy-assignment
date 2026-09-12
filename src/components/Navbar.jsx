@@ -5,15 +5,17 @@ import {
   ShieldAlert, LogOut, UserCheck, Sparkles, MapPin
 } from 'lucide-react';
 import { Auth, ASSIGNED_LOCALITY, CITY } from '../services/api';
+import IvyLogo from './IvyLogo';
 
-export default function Navbar({ onOpenLogin, savedCount }) {
+export default function Navbar({ user: propUser, onLogout, onOpenLogin, savedCount }) {
   const location = useLocation();
-  const [user, setUser] = useState(Auth.getUser());
+  const [localUser, setLocalUser] = useState(Auth.getUser());
+  const user = propUser !== undefined ? propUser : localUser;
   const [sessionTimeLeft, setSessionTimeLeft] = useState(null);
 
   useEffect(() => {
     const updateUser = () => {
-      setUser(Auth.getUser());
+      setLocalUser(Auth.getUser());
     };
 
     window.addEventListener('storage', updateUser);
@@ -37,9 +39,12 @@ export default function Navbar({ onOpenLogin, savedCount }) {
   }, []);
 
   const handleLogout = () => {
-    Auth.logout();
-    setUser(null);
-    window.location.reload();
+    if (onLogout) {
+      onLogout();
+    } else {
+      Auth.logout();
+      setLocalUser(null);
+    }
   };
 
   const navLinks = [
@@ -61,30 +66,16 @@ export default function Navbar({ onOpenLogin, savedCount }) {
         <div className="flex items-center justify-between h-16">
           
           {/* Logo & City Badge */}
-          <div className="flex items-center space-x-3">
-            <Link to="/" className="flex items-center space-x-2.5 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-cyan-400 p-0.5 shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">
-                <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-emerald-400" />
-                </div>
-              </div>
-              <div>
-                <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-                  Ivy Homes
-                </span>
-                <div className="flex items-center text-[10px] font-medium text-emerald-400 uppercase tracking-widest">
-                  <span>Intelligence</span>
-                  <span className="mx-1 text-slate-600">·</span>
-                  <span className="text-slate-400">Sep 2026</span>
-                </div>
-              </div>
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <Link to="/" className="flex items-center py-1 group focus:outline-none">
+              <IvyLogo className="h-6 sm:h-7 w-auto transition-transform group-hover:scale-[1.03]" />
             </Link>
 
             <div className="hidden md:flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs text-slate-300">
-              <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+              <MapPin className="w-3.5 h-3.5 text-blue-400" />
               <span className="font-semibold text-white">{CITY}</span>
               <span className="text-slate-500">/</span>
-              <span className="text-emerald-400 capitalize font-medium">{ASSIGNED_LOCALITY}</span>
+              <span className="text-blue-400 capitalize font-medium">{ASSIGNED_LOCALITY}</span>
             </div>
           </div>
 
@@ -101,19 +92,19 @@ export default function Navbar({ onOpenLogin, savedCount }) {
                     isActive 
                       ? 'text-white bg-slate-900 shadow-inner border border-slate-700/60' 
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
-                  } ${item.highlight && !isActive ? 'text-emerald-400 font-semibold' : ''}`}
+                  } ${item.highlight && !isActive ? 'text-blue-400 font-semibold' : ''}`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-400' : ''}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-blue-400' : ''}`} />
                   <span>{item.label}</span>
                   {item.badge !== null && item.badge !== undefined && (
-                    <span className="ml-1.5 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span className="ml-1.5 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
                       {item.badge}
                     </span>
                   )}
                   {item.highlight && (
                     <span className="flex h-1.5 w-1.5 relative">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500"></span>
                     </span>
                   )}
                 </Link>
@@ -122,12 +113,12 @@ export default function Navbar({ onOpenLogin, savedCount }) {
           </nav>
 
           {/* User & Auth Controls */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             {user ? (
               <div className="flex items-center space-x-2">
                 <div className="hidden sm:flex flex-col items-end">
                   <div className="flex items-center space-x-1.5 text-xs text-slate-200 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span>{user.email}</span>
                   </div>
                   {sessionTimeLeft && (
@@ -139,7 +130,7 @@ export default function Navbar({ onOpenLogin, savedCount }) {
                 <button
                   onClick={handleLogout}
                   title="Log out"
-                  className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-900/50 transition-colors"
+                  className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-900/50 transition-colors cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -147,10 +138,10 @@ export default function Navbar({ onOpenLogin, savedCount }) {
             ) : (
               <button
                 onClick={onOpenLogin}
-                className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-semibold text-sm shadow-lg shadow-emerald-500/20 transition-all hover:shadow-emerald-500/30 active:scale-95"
+                className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm shadow-md shadow-blue-600/30 transition-all cursor-pointer active:scale-95"
               >
                 <UserCheck className="w-4 h-4" />
-                <span>Sign In Demo</span>
+                <span>Sign In</span>
               </button>
             )}
           </div>

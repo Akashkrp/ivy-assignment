@@ -7,10 +7,26 @@ import {
 } from 'lucide-react';
 import { API, formatCrores, formatINR } from '../services/api';
 import ListingCard from '../components/ListingCard';
+import AuthGate from '../components/AuthGate';
 
-export default function ListingDetailView({ savedListings = [], onToggleSave }) {
+export default function ListingDetailView({ user, onOpenLogin, savedListings = [], onToggleSave }) {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  if (!user) {
+    return (
+      <div className="min-h-screen pb-20 pt-8">
+        <AuthGate
+          title="Verified Property Record Locked"
+          subtitle="Bangalore Real Estate Intelligence"
+          description="Sign in with an Ivy Homes demo account to view verified pricing, carpet area details, seller contacts, and comparable unit valuations."
+          icon={Building2}
+          onOpenLogin={onOpenLogin}
+        />
+      </div>
+    );
+  }
+
   const [listing, setListing] = useState(null);
   const [similar, setSimilar] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -261,7 +277,7 @@ export default function ListingDetailView({ savedListings = [], onToggleSave }) 
                     <span>Floor Level</span>
                   </div>
                   <div className="text-lg font-bold text-white">
-                    Floor {listing.floor ?? 0} of {listing.total_floors ?? 0}
+                    {listing.total_floors ? `Floor ${listing.floor ?? 0} of ${listing.total_floors}` : `Floor ${listing.floor ?? 0}`}
                   </div>
                 </div>
 
@@ -271,7 +287,7 @@ export default function ListingDetailView({ savedListings = [], onToggleSave }) 
                     <span>Facing Direction</span>
                   </div>
                   <div className="text-lg font-bold text-white capitalize">
-                    {listing.facing_direction || 'East'}
+                    {listing.facing_direction || 'Not Specified'}
                   </div>
                 </div>
 
@@ -291,7 +307,7 @@ export default function ListingDetailView({ savedListings = [], onToggleSave }) 
                     <span>Furnishing</span>
                   </div>
                   <div className="text-lg font-bold text-white capitalize">
-                    {listing.furnishing || 'Unfurnished'}
+                    {listing.furnishing || 'Not Specified'}
                   </div>
                 </div>
 
@@ -310,41 +326,53 @@ export default function ListingDetailView({ savedListings = [], onToggleSave }) 
 
             {/* Description */}
             <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
-              <h2 className="text-lg font-bold text-white mb-3">Seller's Description</h2>
+              <h2 className="text-lg font-bold text-white mb-3">Property Overview & Details</h2>
               <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line bg-slate-950/50 p-4 rounded-2xl border border-slate-800/80">
-                {listing.description || 'No detailed seller description provided.'}
+                {listing.description || 'No additional property overview description provided in dataset.'}
               </p>
             </div>
 
           </div>
 
-          {/* Sidebar (Seller Contact & Metadata) */}
+          {/* Sidebar (Ivy Homes Direct Assurance & Verified Metadata) */}
           <div className="space-y-6">
             
-            {/* Contact Card */}
+            {/* Ivy Direct Purchase & Advisory Card */}
             <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl">
-              <h3 className="text-base font-bold text-white mb-4 flex items-center space-x-2">
-                <User className="w-4 h-4 text-emerald-400" />
-                <span>Seller Information</span>
-              </h3>
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-8 h-8 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                  <Building2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white leading-tight">Ivy Homes Advisory</h3>
+                  <div className="text-[11px] text-blue-400 font-semibold">Direct Evaluation & Purchase</div>
+                </div>
+              </div>
 
               <div className="space-y-3">
-                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-                  <div className="text-[11px] text-slate-500 font-semibold uppercase">Contact Name</div>
-                  <div className="text-sm font-bold text-slate-200 mt-0.5">
-                    {listing.posted_by_name || 'Agent / Owner'}
+                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-400">Listing Reference:</span>
+                    <span className="font-mono text-emerald-400 font-bold">{listing.listing_id}</span>
                   </div>
-                  <div className="text-xs text-emerald-400 capitalize font-medium">
-                    Posted as {listing.posted_by || 'Owner'}
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-400">Transaction Model:</span>
+                    <span className="text-emerald-400 font-medium">Direct / Zero Brokerage</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-400">Verified Locality:</span>
+                    <span className="text-white capitalize font-medium">{listing.locality}</span>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-                  <div className="text-[11px] text-slate-500 font-semibold uppercase">Phone Number</div>
-                  <div className="text-sm font-mono font-bold text-white mt-0.5 flex items-center space-x-2">
-                    <Phone className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>{listing.posted_by_contact || '+91 200 0000000'}</span>
+                <div className="p-3.5 rounded-xl bg-blue-950/30 border border-blue-800/40 text-xs text-slate-300 leading-relaxed space-y-1.5">
+                  <div className="font-semibold text-blue-300 flex items-center space-x-1.5">
+                    <ShieldCheck className="w-4 h-4 text-blue-400 shrink-0" />
+                    <span>No Middlemen or Brokerage Calls</span>
                   </div>
+                  <p className="text-[11px] text-slate-400">
+                    Ivy Homes manages all property evaluations and transactions directly. We eliminate spam calls, fake intermediary brokers, and commission fees.
+                  </p>
                 </div>
 
                 {listing.listing_url && (
@@ -354,7 +382,7 @@ export default function ListingDetailView({ savedListings = [], onToggleSave }) 
                     rel="noopener noreferrer"
                     className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700/80 text-slate-200 text-xs font-bold transition-colors"
                   >
-                    <span>View On {listing.website}</span>
+                    <span>View Portal Source ({listing.website})</span>
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 )}
@@ -364,15 +392,22 @@ export default function ListingDetailView({ savedListings = [], onToggleSave }) 
             {/* Geographical Coordinates */}
             <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl">
               <h3 className="text-base font-bold text-white mb-3 flex items-center space-x-2">
-                <MapPin className="w-4 h-4 text-emerald-400" />
+                <MapPin className="w-4 h-4 text-blue-400" />
                 <span>Geographic Location</span>
               </h3>
               
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 font-mono space-y-1">
-                <div>Latitude: {listing.latitude}</div>
-                <div>Longitude: {listing.longitude}</div>
-                <div className="text-[10px] text-slate-500 pt-1">
-                  City ID: {listing.city_id} (Bangalore, KA)
+              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 font-mono space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Latitude:</span>
+                  <span className="text-slate-200">{listing.latitude}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Longitude:</span>
+                  <span className="text-slate-200">{listing.longitude}</span>
+                </div>
+                <div className="flex justify-between border-t border-slate-800/80 pt-1.5 text-[11px] font-sans">
+                  <span className="text-slate-500">Region:</span>
+                  <span className="text-emerald-400 capitalize">{listing.locality}, Bangalore</span>
                 </div>
               </div>
             </div>

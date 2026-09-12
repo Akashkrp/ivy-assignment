@@ -3,11 +3,27 @@ import { Link } from 'react-router-dom';
 import { Heart, Home, Trash2, Building2, ExternalLink } from 'lucide-react';
 import { API, Auth } from '../services/api';
 import ListingCard from '../components/ListingCard';
+import AuthGate from '../components/AuthGate';
 
-export default function FavouritesView({ savedListings = [], onToggleSave }) {
+export default function FavouritesView({ user: propUser, onOpenLogin, savedListings = [], onToggleSave }) {
+  const user = propUser !== undefined ? propUser : Auth.getUser();
+
+  if (!user) {
+    return (
+      <div className="min-h-screen pb-20 pt-8">
+        <AuthGate
+          title="Saved Properties Portfolio Locked"
+          subtitle="Personalized Watchlist"
+          description="Sign in with an Ivy Homes demo account to access and synchronize your shortlisted Bangalore properties across devices."
+          icon={Heart}
+          onOpenLogin={onOpenLogin}
+        />
+      </div>
+    );
+  }
+
   const [allListings, setAllListings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const user = Auth.getUser();
 
   useEffect(() => {
     async function load() {

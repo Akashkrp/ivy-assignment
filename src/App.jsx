@@ -10,18 +10,44 @@ import FavouritesView from './pages/FavouritesView';
 import InsightsView from './pages/InsightsView';
 import { API, Auth, CITY } from './services/api';
 import { Building2, ExternalLink, ShieldCheck } from 'lucide-react';
+import IvyLogo from './components/IvyLogo';
 
 export default function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [loginInitialEmail, setLoginInitialEmail] = useState('demo1@ivy.homes');
+  const [user, setUser] = useState(Auth.getUser());
   const [savedListings, setSavedListings] = useState([]);
 
-  // Load saved listings on mount
+  const handleOpenLogin = (email = 'demo1@ivy.homes') => {
+    if (typeof email === 'string') {
+      setLoginInitialEmail(email);
+    }
+    setIsLoginOpen(true);
+  };
+
+  const handleLogout = () => {
+    Auth.logout();
+    setUser(null);
+    setSavedListings([]);
+  };
+
+  // Load saved listings on mount & sync auth state
   useEffect(() => {
     async function loadSaved() {
-      const ids = await API.getSavedListings();
-      setSavedListings(ids);
+      if (Auth.isAuthenticated()) {
+        const ids = await API.getSavedListings();
+        setSavedListings(ids);
+      } else {
+        setSavedListings([]);
+      }
     }
     loadSaved();
+
+    const handleAuthChange = () => {
+      setUser(Auth.getUser());
+    };
+    window.addEventListener('storage', handleAuthChange);
+    return () => window.removeEventListener('storage', handleAuthChange);
   }, []);
 
   const handleToggleSave = async (listingId) => {
@@ -34,18 +60,21 @@ export default function App() {
     }
   };
 
-  const handleLoginSuccess = async () => {
+  const handleLoginSuccess = async (data) => {
+    setUser(Auth.getUser());
     const ids = await API.getSavedListings();
     setSavedListings(ids);
   };
 
   return (
     <Router>
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-emerald-500 selection:text-slate-950">
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-blue-600 selection:text-white">
         
         {/* Navigation */}
         <Navbar 
-          onOpenLogin={() => setIsLoginOpen(true)}
+          user={user}
+          onLogout={handleLogout}
+          onOpenLogin={handleOpenLogin}
           savedCount={savedListings.length}
         />
 
@@ -56,6 +85,8 @@ export default function App() {
               path="/" 
               element={
                 <ListingsView 
+                  user={user}
+                  onOpenLogin={handleOpenLogin}
                   savedListings={savedListings} 
                   onToggleSave={handleToggleSave} 
                 />
@@ -65,6 +96,8 @@ export default function App() {
               path="/listings/:id" 
               element={
                 <ListingDetailView 
+                  user={user}
+                  onOpenLogin={handleOpenLogin}
                   savedListings={savedListings} 
                   onToggleSave={handleToggleSave} 
                 />
@@ -72,16 +105,28 @@ export default function App() {
             />
             <Route 
               path="/rentals" 
-              element={<RentalsView />} 
+              element={
+                <RentalsView 
+                  user={user} 
+                  onOpenLogin={handleOpenLogin} 
+                />
+              } 
             />
             <Route 
               path="/projects" 
-              element={<ProjectsView />} 
+              element={
+                <ProjectsView 
+                  user={user} 
+                  onOpenLogin={handleOpenLogin} 
+                />
+              } 
             />
             <Route 
               path="/favourites" 
               element={
                 <FavouritesView 
+                  user={user}
+                  onOpenLogin={handleOpenLogin}
                   savedListings={savedListings} 
                   onToggleSave={handleToggleSave} 
                 />
@@ -89,7 +134,12 @@ export default function App() {
             />
             <Route 
               path="/insights" 
-              element={<InsightsView />} 
+              element={
+                <InsightsView 
+                  user={user} 
+                  onOpenLogin={handleOpenLogin} 
+                />
+              } 
             />
           </Routes>
         </main>
@@ -97,6 +147,7 @@ export default function App() {
         {/* Login Modal */}
         <LoginModal
           isOpen={isLoginOpen}
+          initialEmail={loginInitialEmail}
           onClose={() => setIsLoginOpen(false)}
           onLoginSuccess={handleLoginSuccess}
         />
@@ -106,11 +157,8 @@ export default function App() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
             
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                <Building2 className="w-4 h-4" />
-              </div>
+              <IvyLogo className="h-6 w-auto" />
               <div>
-                <span className="font-extrabold text-white text-sm">Ivy Homes</span>
                 <div className="text-[11px] text-slate-400">
                   Software Engineering Internship Assignment · September 2026
                 </div>

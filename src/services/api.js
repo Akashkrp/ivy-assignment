@@ -4,11 +4,11 @@ export const DEFAULT_API_KEY = 'IVY26-AD650B779304';
 export const ASSIGNED_LOCALITY = 'bellandur';
 export const CITY = 'Bangalore';
 
-// Demo Credentials for quick-fill
+// Demo Credentials for evaluation
 export const DEMO_USERS = [
-  { email: 'demo1@ivy.homes', role: 'Primary Demo' },
-  { email: 'demo2@ivy.homes', role: 'Reviewer Account' },
-  { email: 'demo3@ivy.homes', role: 'Auditor Account' },
+  { email: 'demo1@ivy.homes', label: 'Account 1' },
+  { email: 'demo2@ivy.homes', label: 'Account 2' },
+  { email: 'demo3@ivy.homes', label: 'Account 3' },
 ];
 export const DEMO_PASSWORD = 'c42d10ad7b';
 

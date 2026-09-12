@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { API, formatINR, ASSIGNED_LOCALITY, CITY } from '../services/api';
 import PropertySkeleton from '../components/PropertySkeleton';
+import AuthGate from '../components/AuthGate';
+import RentalDetailModal from '../components/RentalDetailModal';
 
 const LOCALITIES = [
   'all', 'bellandur', 'koramangala', 'whitefield', 'hsr layout',
@@ -15,7 +17,21 @@ const LOCALITIES = [
 const BHK_OPTIONS = ['all', '1', '2', '3', '4'];
 const ITEMS_PER_PAGE = 20;
 
-export default function RentalsView() {
+export default function RentalsView({ user, onOpenLogin }) {
+  if (!user) {
+    return (
+      <div className="min-h-screen pb-20 pt-8">
+        <AuthGate
+          title="Bangalore Rental Intelligence Locked"
+          subtitle="Verified Rental Yields & Portals"
+          description="Sign in with an Ivy Homes demo account to access verified rental properties across Bellandur, Whitefield, and Bangalore corridors with real-time rental analytics."
+          icon={KeyRound}
+          onOpenLogin={onOpenLogin}
+        />
+      </div>
+    );
+  }
+
   const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -24,6 +40,7 @@ export default function RentalsView() {
   const [maxRent, setMaxRent] = useState('');
   const [sortBy, setSortBy] = useState('rent_asc');
   const [page, setPage] = useState(1);
+  const [selectedRental, setSelectedRental] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -254,7 +271,8 @@ export default function RentalsView() {
                   exit={{ opacity: 0, scale: 0.96 }}
                   whileHover={{ y: -6, scale: 1.015 }}
                   transition={{ duration: 0.25, ease: 'easeOut' }}
-                  className="bg-slate-900/85 hover:bg-slate-900 border border-slate-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:shadow-emerald-950/30 flex flex-col justify-between will-change-transform"
+                  onClick={() => setSelectedRental(r)}
+                  className="bg-slate-900/85 hover:bg-slate-900 border border-slate-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:shadow-emerald-950/30 flex flex-col justify-between will-change-transform cursor-pointer transition-all group"
                 >
                   <div>
                     <div className="flex items-center justify-between text-xs mb-3">
@@ -267,7 +285,7 @@ export default function RentalsView() {
                       </span>
                     </div>
 
-                    <h3 className="text-base font-bold text-white line-clamp-1 mb-1">
+                    <h3 className="text-base font-bold text-white line-clamp-1 mb-1 group-hover:text-emerald-400 transition-colors">
                       {r.title || `${r.bedroom} BHK in ${r.apartment_name}`}
                     </h3>
                     <div className="text-xs text-slate-400 mb-4 line-clamp-1">
@@ -349,6 +367,12 @@ export default function RentalsView() {
         )}
 
       </div>
+
+      {/* Rental Detail Modal */}
+      <RentalDetailModal
+        rental={selectedRental}
+        onClose={() => setSelectedRental(null)}
+      />
 
     </div>
   );
