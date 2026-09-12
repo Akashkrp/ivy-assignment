@@ -2,10 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   BarChart3, CheckCircle2, AlertTriangle, 
   Search, Award, ShieldAlert, Sparkles, MapPin, 
-  Layers, Copy, Check, ExternalLink, HelpCircle, Flame, Building2
+  Layers, Copy, Check, ExternalLink, HelpCircle, Flame, Building2, Box
 } from 'lucide-react';
 import { API, CITY, ASSIGNED_LOCALITY, formatINR, formatCrores } from '../services/api';
 import AuthGate from '../components/AuthGate';
+import ThreeBuildingMap from '../components/ThreeBuildingMap';
+
 
 const CATEGORIES = [
   'all', 'auth', 'pagination', 'units', 'filters', 'timestamps',
@@ -222,6 +224,13 @@ export default function InsightsView({ user, onOpenLogin }) {
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>10/10 Verified</span>
                 </span>
+                <button
+                  onClick={() => setActiveTab('3dmap')}
+                  className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-blue-50 hover:bg-blue-100 border border-blue-200 text-[#0018A8] text-xs font-bold transition-colors cursor-pointer shadow-xs"
+                >
+                  <Box className="w-3.5 h-3.5 text-blue-600" />
+                  <span>3D Simulation</span>
+                </button>
               </div>
               <p className="text-sm text-slate-600 max-w-2xl font-medium">
                 Calculated answers for all 10 assignment questions, Bellandur assigned locality analysis, and documentation discrepancies.
@@ -254,6 +263,23 @@ export default function InsightsView({ user, onOpenLogin }) {
             >
               <Award className="w-4 h-4" />
               <span>The 10 Questions & Answers</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('3dmap')}
+              className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center space-x-2 cursor-pointer border ${
+                activeTab === '3dmap'
+                  ? 'bg-[#0018A8] border-[#0018A8] text-white shadow-md'
+                  : 'bg-white border-blue-200 text-[#0018A8] hover:bg-blue-50 hover:border-blue-300'
+              }`}
+            >
+              <Building2 className={`w-4 h-4 ${activeTab === '3dmap' ? 'text-white' : 'text-[#0018A8]'}`} />
+              <span>Bellandur 3D Locality Map</span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                activeTab === '3dmap' ? 'bg-blue-900 text-blue-200' : 'bg-blue-100 text-[#0018A8]'
+              }`}>
+                WebGL
+              </span>
             </button>
 
             <button
@@ -311,6 +337,13 @@ export default function InsightsView({ user, onOpenLogin }) {
       {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         
+        {/* TAB: 3D Locality & Building Map Simulation */}
+        {activeTab === '3dmap' && (
+          <div className="space-y-6">
+            <ThreeBuildingMap />
+          </div>
+        )}
+
         {/* TAB 1: The 10 Questions & Answers (Exact Card Style as User Reference) */}
         {activeTab === 'questions' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
