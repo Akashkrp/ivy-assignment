@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, SlidersHorizontal, ArrowUpDown, ShieldCheck, 
   Sparkles, AlertTriangle, Filter, RotateCcw, ChevronLeft, ChevronRight,
@@ -6,6 +7,7 @@ import {
 } from 'lucide-react';
 import { API, ASSIGNED_LOCALITY, CITY } from '../services/api';
 import ListingCard from '../components/ListingCard';
+import PropertySkeleton from '../components/PropertySkeleton';
 
 const LOCALITIES = [
   'all', 'bellandur', 'koramangala', 'hsr layout', 'whitefield', 
@@ -39,7 +41,7 @@ export default function ListingsView({ savedListings = [], onToggleSave }) {
   const [maxPrice, setMaxPrice] = useState('');
   const [activeOnly, setActiveOnly] = useState(true);
   const [hideAnomalies, setHideAnomalies] = useState(true);
-  const [sortBy, setSortBy] = useState('posted_desc'); // posted_desc, price_asc, price_desc, area_desc
+  const [sortBy, setSortBy] = useState('posted_desc');
   const [page, setPage] = useState(1);
 
   // Load Data
@@ -56,7 +58,6 @@ export default function ListingsView({ savedListings = [], onToggleSave }) {
   // Filter Logic (Client-side engine compensates for server ignoring min_price, max_price, furnishing)
   const filteredListings = useMemo(() => {
     return allListings.filter((l) => {
-      // 1. Search term
       if (search.trim()) {
         const q = search.toLowerCase().trim();
         const matchApt = (l.apartment_name || '').toLowerCase().includes(q);
@@ -66,12 +67,10 @@ export default function ListingsView({ savedListings = [], onToggleSave }) {
         if (!matchApt && !matchLoc && !matchDesc && !matchId) return false;
       }
 
-      // 2. Locality
       if (locality !== 'all' && (l.locality || '').toLowerCase() !== locality.toLowerCase()) {
         return false;
       }
 
-      // 3. BHK
       if (bhk !== 'all') {
         if (bhk === '5+') {
           if ((l.bedroom || 0) < 5) return false;
@@ -80,32 +79,26 @@ export default function ListingsView({ savedListings = [], onToggleSave }) {
         }
       }
 
-      // 4. Property Type
       if (propType !== 'all' && (l.property_type || '').toLowerCase() !== propType.toLowerCase()) {
         return false;
       }
 
-      // 5. Furnishing
       if (furnishing !== 'all' && (l.furnishing || '').toLowerCase() !== furnishing.toLowerCase()) {
         return false;
       }
 
-      // 6. Min Price
       if (minPrice !== '' && !isNaN(minPrice)) {
         if (l.price < parseFloat(minPrice)) return false;
       }
 
-      // 7. Max Price
       if (maxPrice !== '' && !isNaN(maxPrice)) {
         if (l.price > parseFloat(maxPrice)) return false;
       }
 
-      // 8. Active only
       if (activeOnly && !l.is_live) {
         return false;
       }
 
-      // 9. Hide anomalies (corrupt & fake listings)
       if (hideAnomalies && (l.is_corrupt || l.is_fake)) {
         return false;
       }
@@ -251,7 +244,7 @@ export default function ListingsView({ savedListings = [], onToggleSave }) {
               <select
                 value={locality}
                 onChange={(e) => { setLocality(e.target.value); setPage(1); }}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white capitalize focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white capitalize focus:outline-none focus:border-emerald-500 transition-colors"
               >
                 {LOCALITIES.map((loc) => (
                   <option key={loc} value={loc}>
@@ -270,7 +263,7 @@ export default function ListingsView({ savedListings = [], onToggleSave }) {
               <select
                 value={bhk}
                 onChange={(e) => { setBhk(e.target.value); setPage(1); }}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
               >
                 {BHK_OPTIONS.map((b) => (
                   <option key={b} value={b}>
@@ -290,7 +283,7 @@ export default function ListingsView({ savedListings = [], onToggleSave }) {
                 value={minPrice}
                 onChange={(e) => { setMinPrice(e.target.value); setPage(1); }}
                 placeholder="e.g. 5000000"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
               />
             </div>
 
@@ -304,7 +297,7 @@ export default function ListingsView({ savedListings = [], onToggleSave }) {
                 value={maxPrice}
                 onChange={(e) => { setMaxPrice(e.target.value); setPage(1); }}
                 placeholder="e.g. 20000000"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
               />
             </div>
 
@@ -316,7 +309,7 @@ export default function ListingsView({ savedListings = [], onToggleSave }) {
               <select
                 value={propType}
                 onChange={(e) => { setPropType(e.target.value); setPage(1); }}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white capitalize focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white capitalize focus:outline-none focus:border-emerald-500 transition-colors"
               >
                 {PROPERTY_TYPES.map((pt) => (
                   <option key={pt} value={pt}>
@@ -334,7 +327,7 @@ export default function ListingsView({ savedListings = [], onToggleSave }) {
               <select
                 value={furnishing}
                 onChange={(e) => { setFurnishing(e.target.value); setPage(1); }}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white capitalize focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white capitalize focus:outline-none focus:border-emerald-500 transition-colors"
               >
                 {FURNISHING_OPTIONS.map((f) => (
                   <option key={f} value={f}>
@@ -352,7 +345,7 @@ export default function ListingsView({ savedListings = [], onToggleSave }) {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
               >
                 <option value="posted_desc">Recently Posted</option>
                 <option value="price_asc">Price: Low to High</option>
@@ -363,7 +356,7 @@ export default function ListingsView({ savedListings = [], onToggleSave }) {
 
             {/* Toggles (Active Only & Hide Anomalies) */}
             <div className="flex flex-col justify-end space-y-2 pt-1">
-              <label className="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer">
+              <label className="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={activeOnly}
@@ -373,7 +366,7 @@ export default function ListingsView({ savedListings = [], onToggleSave }) {
                 <span className="font-medium">Live / Active Only</span>
               </label>
 
-              <label className="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer">
+              <label className="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={hideAnomalies}
@@ -392,20 +385,16 @@ export default function ListingsView({ savedListings = [], onToggleSave }) {
         <div className="flex items-center justify-between mb-6">
           <div className="text-sm text-slate-400 font-medium">
             Showing <span className="font-bold text-white">{sortedListings.length}</span> matching properties
-            {hideAnomalies && ' (excluding 48 corrupt/fake records)'}
+            {hideAnomalies && ' (excluding corrupt/fake records)'}
           </div>
-          <div className="text-xs text-slate-500">
+          <div className="text-xs text-slate-500 font-medium">
             Page {currentPage} of {totalPages}
           </div>
         </div>
 
-        {/* Listings Grid */}
+        {/* Listings Grid with Skeleton Loading */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-72 bg-slate-900/50 rounded-2xl animate-pulse border border-slate-800"></div>
-            ))}
-          </div>
+          <PropertySkeleton count={12} />
         ) : pagedListings.length === 0 ? (
           <div className="text-center py-20 bg-slate-900/40 rounded-3xl border border-slate-800/80 p-8">
             <Home className="w-12 h-12 text-slate-600 mx-auto mb-3" />
@@ -421,42 +410,51 @@ export default function ListingsView({ savedListings = [], onToggleSave }) {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {pagedListings.map((listing) => (
-              <ListingCard
-                key={listing.listing_id}
-                listing={listing}
-                isSaved={savedListings.includes(listing.listing_id)}
-                onToggleSave={onToggleSave}
-              />
-            ))}
-          </div>
+          <motion.div 
+            layout
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          >
+            <AnimatePresence mode="popLayout">
+              {pagedListings.map((listing) => (
+                <ListingCard
+                  key={listing.listing_id}
+                  listing={listing}
+                  isSaved={savedListings.includes(listing.listing_id)}
+                  onToggleSave={onToggleSave}
+                />
+              ))}
+            </AnimatePresence>
+          </motion.div>
         )}
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
           <div className="mt-12 flex items-center justify-center space-x-2">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 300, behavior: 'smooth' }); }}
               disabled={currentPage === 1}
               className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
-            </button>
+            </motion.button>
 
-            <div className="flex items-center space-x-1 px-2 text-sm font-semibold">
+            <div className="flex items-center space-x-1 px-3 text-sm font-semibold">
               <span className="text-emerald-400">{currentPage}</span>
               <span className="text-slate-600">/</span>
               <span className="text-slate-400">{totalPages}</span>
             </div>
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 300, behavior: 'smooth' }); }}
               disabled={currentPage === totalPages}
               className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
-            </button>
+            </motion.button>
           </div>
         )}
 

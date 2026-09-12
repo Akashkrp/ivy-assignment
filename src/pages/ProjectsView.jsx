@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, Search, MapPin, Calendar, Award, 
   Sparkles, AlertCircle, CheckCircle2, ChevronLeft, ChevronRight, Layers, Tag
 } from 'lucide-react';
 import { API, formatINR, formatCrores, CITY } from '../services/api';
+import PropertySkeleton from '../components/PropertySkeleton';
 
 const ITEMS_PER_PAGE = 18;
 
@@ -111,7 +113,10 @@ export default function ProjectsView() {
 
             {/* Costliest Project Banner (Question 7) */}
             {costliest && (
-              <div className="bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-emerald-500/40 rounded-3xl p-5 shadow-2xl shadow-emerald-950/40 max-w-md">
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                className="bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-emerald-500/40 rounded-3xl p-5 shadow-2xl shadow-emerald-950/40 max-w-md"
+              >
                 <div className="flex items-center justify-between text-xs mb-2">
                   <span className="font-bold text-emerald-400 uppercase tracking-wider flex items-center space-x-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-amber-400" />
@@ -134,7 +139,7 @@ export default function ProjectsView() {
                   <span>Developer: {costliest.developer_name}</span>
                   <span className="capitalize">{costliest.locality}</span>
                 </div>
-              </div>
+              </motion.div>
             )}
 
           </div>
@@ -186,7 +191,7 @@ export default function ProjectsView() {
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                   placeholder="e.g. Puravankara Vista, Brigade..."
-                  className="w-full pl-10 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full pl-10 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
                 />
               </div>
             </div>
@@ -198,7 +203,7 @@ export default function ProjectsView() {
               <select
                 value={locality}
                 onChange={(e) => { setLocality(e.target.value); setPage(1); }}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white capitalize focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white capitalize focus:outline-none focus:border-emerald-500 transition-colors"
               >
                 {localities.map(loc => (
                   <option key={loc} value={loc}>{loc === 'all' ? 'All Localities' : loc}</option>
@@ -213,7 +218,7 @@ export default function ProjectsView() {
               <select
                 value={status}
                 onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white capitalize focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white capitalize focus:outline-none focus:border-emerald-500 transition-colors"
               >
                 {statuses.map(st => (
                   <option key={st} value={st}>{st === 'all' ? 'All Statuses' : st}</option>
@@ -231,125 +236,136 @@ export default function ProjectsView() {
 
         {/* Projects Cards Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-72 bg-slate-900 rounded-2xl animate-pulse border border-slate-800"></div>
-            ))}
-          </div>
+          <PropertySkeleton count={9} />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pagedProjects.map((p) => {
-              const actualLive = liveCountByProject[p.project_id] || 0;
-              const hasWrongCount = p.total_listings !== actualLive;
+          <motion.div 
+            layout
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            <AnimatePresence mode="popLayout">
+              {pagedProjects.map((p) => {
+                const actualLive = liveCountByProject[p.project_id] || 0;
+                const hasWrongCount = p.total_listings !== actualLive;
 
-              return (
-                <div
-                  key={p.project_id}
-                  className="bg-slate-900/85 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-3xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 flex flex-col justify-between"
-                >
-                  <div>
-                    {/* Header */}
-                    <div className="flex items-start justify-between gap-2 mb-3">
-                      <div>
-                        <span className="text-xs text-emerald-400 font-semibold tracking-wider uppercase">
-                          {p.developer_name}
+                return (
+                  <motion.div
+                    key={p.project_id}
+                    layout
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.96 }}
+                    whileHover={{ y: -6, scale: 1.015 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                    className="bg-slate-900/85 hover:bg-slate-900 border border-slate-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:shadow-emerald-950/30 flex flex-col justify-between will-change-transform"
+                  >
+                    <div>
+                      {/* Header */}
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <div>
+                          <span className="text-xs text-emerald-400 font-semibold tracking-wider uppercase">
+                            {p.developer_name}
+                          </span>
+                          <h3 className="text-lg font-bold text-white leading-snug">
+                            {p.apartment_name}
+                          </h3>
+                        </div>
+                        <span className="text-xs font-mono font-semibold text-slate-400 bg-slate-950 px-2 py-1 rounded-lg border border-slate-800">
+                          {p.project_id}
                         </span>
-                        <h3 className="text-lg font-bold text-white leading-snug">
-                          {p.apartment_name}
-                        </h3>
                       </div>
-                      <span className="text-xs font-mono font-semibold text-slate-400 bg-slate-950 px-2 py-1 rounded-lg border border-slate-800">
-                        {p.project_id}
-                      </span>
+
+                      <div className="flex items-center space-x-2 text-xs text-slate-400 mb-4">
+                        <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="capitalize font-semibold text-slate-300">{p.locality}</span>
+                        <span>·</span>
+                        <span className="capitalize text-slate-400">{p.project_status}</span>
+                      </div>
+
+                      {/* Normalized Price Range */}
+                      <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800/80 mb-4">
+                        <div className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">
+                          Price Range (Normalized INR)
+                        </div>
+                        <div className="text-lg font-black text-white mt-0.5">
+                          {p.price_min_display} – {p.price_max_display}
+                        </div>
+                        <div className="text-[11px] text-slate-500 font-mono mt-1">
+                          Raw: {p.raw_price_min} to {p.raw_price_max}
+                        </div>
+                      </div>
+
+                      {/* Specs */}
+                      <div className="grid grid-cols-2 gap-2 text-xs text-slate-300 py-3 border-t border-slate-800/80">
+                        <div>
+                          <span className="text-slate-500">Area Range:</span>{' '}
+                          <span className="font-semibold">{p.min_area_sqft} - {p.max_area_sqft} sqft</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Towers / Floors:</span>{' '}
+                          <span className="font-semibold">{p.total_towers} / {p.total_floors}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Units:</span>{' '}
+                          <span className="font-semibold">{p.total_units} total</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Possession:</span>{' '}
+                          <span className="font-semibold">{p.possession_date || 'Ongoing'}</span>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex items-center space-x-2 text-xs text-slate-400 mb-4">
-                      <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="capitalize font-semibold text-slate-300">{p.locality}</span>
-                      <span>·</span>
-                      <span className="capitalize text-slate-400">{p.project_status}</span>
+                    {/* Discrepancy / Inventory Footnote (Question 10 verification) */}
+                    <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
+                      <div className="flex items-center space-x-1.5">
+                        <span className="text-slate-400 font-medium">Listings:</span>
+                        <span className="font-bold text-white">{actualLive} active</span>
+                      </div>
+
+                      {hasWrongCount ? (
+                        <span className="flex items-center space-x-1 text-[11px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full" title="Project reports wrong total_listings">
+                          <AlertCircle className="w-3 h-3" />
+                          <span>Reports {p.total_listings} (Lie)</span>
+                        </span>
+                      ) : (
+                        <span className="flex items-center space-x-1 text-[11px] text-emerald-400">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Verified</span>
+                        </span>
+                      )}
                     </div>
 
-                    {/* Normalized Price Range */}
-                    <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800/80 mb-4">
-                      <div className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">
-                        Price Range (Normalized INR)
-                      </div>
-                      <div className="text-lg font-black text-white mt-0.5">
-                        {p.price_min_display} – {p.price_max_display}
-                      </div>
-                      <div className="text-[11px] text-slate-500 font-mono mt-1">
-                        Raw: {p.raw_price_min} to {p.raw_price_max}
-                      </div>
-                    </div>
-
-                    {/* Specs */}
-                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-300 py-3 border-t border-slate-800/80">
-                      <div>
-                        <span className="text-slate-500">Area Range:</span>{' '}
-                        <span className="font-semibold">{p.min_area_sqft} - {p.max_area_sqft} sqft</span>
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Towers / Floors:</span>{' '}
-                        <span className="font-semibold">{p.total_towers} / {p.total_floors}</span>
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Units:</span>{' '}
-                        <span className="font-semibold">{p.total_units} total</span>
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Possession:</span>{' '}
-                        <span className="font-semibold">{p.possession_date || 'Ongoing'}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Discrepancy / Inventory Footnote (Question 10 verification) */}
-                  <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
-                    <div className="flex items-center space-x-1.5">
-                      <span className="text-slate-400 font-medium">Listings:</span>
-                      <span className="font-bold text-white">{actualLive} active</span>
-                    </div>
-
-                    {hasWrongCount ? (
-                      <span className="flex items-center space-x-1 text-[11px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full" title="Project reports wrong total_listings">
-                        <AlertCircle className="w-3 h-3" />
-                        <span>Reports {p.total_listings} (Lie)</span>
-                      </span>
-                    ) : (
-                      <span className="flex items-center space-x-1 text-[11px] text-emerald-400">
-                        <CheckCircle2 className="w-3 h-3" />
-                        <span>Verified</span>
-                      </span>
-                    )}
-                  </div>
-
-                </div>
-              );
-            })}
-          </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </motion.div>
         )}
 
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="mt-12 flex items-center justify-center space-x-2">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 300, behavior: 'smooth' }); }}
               disabled={currentPage === 1}
               className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white disabled:opacity-30 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
-            </button>
+            </motion.button>
             <span className="px-3 text-sm font-semibold text-emerald-400">
               {currentPage} / {totalPages}
             </span>
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 300, behavior: 'smooth' }); }}
               disabled={currentPage === totalPages}
               className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white disabled:opacity-30 transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
-            </button>
+            </motion.button>
           </div>
         )}
 

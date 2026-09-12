@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, Heart, MapPin, Building2, BedDouble, Bath, 
+  ArrowLeft, Heart, MapPin, Building2, Building, BedDouble, Bath, 
   Maximize2, Compass, Layers, Car, ShieldCheck, ShieldAlert,
-  Phone, User, Calendar, ExternalLink, Flame, CheckCircle2, AlertTriangle
+  Phone, User, Calendar, ExternalLink, Flame, CheckCircle2, AlertTriangle, Armchair
 } from 'lucide-react';
 import { API, formatCrores, formatINR } from '../services/api';
 import ListingCard from '../components/ListingCard';
@@ -287,7 +287,7 @@ export default function ListingDetailView({ savedListings = [], onToggleSave }) 
 
                 <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800">
                   <div className="flex items-center space-x-2 text-xs text-slate-400 mb-1">
-                    <Building className="w-4 h-4 text-teal-400" />
+                    <Armchair className="w-4 h-4 text-teal-400" />
                     <span>Furnishing</span>
                   </div>
                   <div className="text-lg font-bold text-white capitalize">
