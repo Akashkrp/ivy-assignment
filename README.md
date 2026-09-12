@@ -5,8 +5,8 @@
 **College Email:** [akash.20234017@mnnit.ac.in](mailto:akash.20234017@mnnit.ac.in)  
 **Assigned City:** Bangalore  
 **Assigned Locality:** Bellandur  
-**Repository:** [https://github.com/akashprasad/ivy-assignment](https://github.com/Akashkrp/ivy-assignment)  
-**Demo URL:** [https://ivy-homes.vercel.app](https://ivy-homes.vercel.app)  
+**Repository:** [https://github.com/Akashkrp/ivy-assignment](https://github.com/Akashkrp/ivy-assignment)  
+**Demo URL:** [https://ivy-assignment.vercel.app](https://ivy-assignment.vercel.app)  
 **Reference Moment:** `2026-09-10T00:00:00+05:30` (IST)  
 
 ---
@@ -301,8 +301,8 @@ The generated `submission.json` adheres strictly to `submission.template.json` w
   "candidate": {
     "name": "Akash Kumar Prasad",
     "email": "akash.20234017@mnnit.ac.in",
-    "repo_url": "https://github.com/akashprasad/ivy-homes",
-    "demo_url": "https://ivy-homes.vercel.app"
+    "repo_url": "https://github.com/Akashkrp/ivy-assignment",
+    "demo_url": "https://ivy-assignment.vercel.app"
   },
   "answers": {
     "total_listing_records": 4700,
