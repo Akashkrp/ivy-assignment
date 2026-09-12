@@ -19,8 +19,11 @@
    - [What We Suspected & Proved (The 22 Documentation Lies)](#what-we-suspected--proved-the-22-documentation-lies)
    - [What We Checked That Turned Out To Be Perfectly Fine](#what-we-checked-that-turned-out-to-be-perfectly-fine)
 5. [Frontend Architecture & Key Features](#frontend-architecture--key-features)
-6. [Data Ingestion & Local SQLite Database](#data-ingestion--local-sqlite-database)
-7. [Submission File Structure (`submission.json`)](#submission-file-structure-submissionjson)
+6. [3D Geospatial Audit & Micro-Market Map](#3d-geospatial-audit--micro-market-map)
+7. [Data Ingestion & Local SQLite Database](#data-ingestion--local-sqlite-database)
+8. [What We Would Do With Another Two Days](#what-we-would-do-with-another-two-days)
+9. [Submission File Structure (`submission.json`)](#submission-file-structure-submissionjson)
+
 
 ---
 
@@ -253,6 +256,39 @@ The application includes an interactive Three.js WebGL cartographic simulation (
 - **Continuous 60 FPS Orbit Engine**: Gentle, cinematic camera orbit that remains smooth and uninterrupted even when hovering over buildings.
 - **Forensic Filters**: Single-click toggles for `Verified Good Physical Units`, `Corrupt Listings (40 IDs)`, `Fraud Bait Listings (8 IDs)`, and specific anomaly sub-types (`Swapped Lat/Lng`, `Negative Price`, `Floor > Total Floors`, `Carpet > SBUA`, `0-BHK Unit`).
 - **Interactive HUD Inspector**: Click or hover any building in 3D to inspect real-time GPS coordinates, apartment name, price, floor level, and forensic auditor diagnostic verdict.
+
+---
+
+## What We Would Do With Another Two Days
+
+If granted another 48 hours to expand the platform and forensic audit engine, we would focus on high-impact engineering priorities across data integrity, machine learning, and consumer liquidity:
+
+### 1. Automated Cross-Portal Reconciliation & Conflict Consensus Engine
+- **The Problem**: In our deduplication analysis (Question 2), we uncovered **518 duplicate clusters (1,036 records)** where competing portals (100acres, dwelling, magichomes, squarelane, zerobroker) posted the identical physical apartment with slight attribute drifts (e.g., price differences of ₹5–15 Lakhs or unit conversion mismatches).
+- **The 48-Hour Solution**: Build an automated **Consensus Resolution Worker** that calculates a "Portal Trust Score" based on historical data cleanliness (e.g., frequency of corrupt listings). It would run weighted median voting across duplicate listings to publish a single "True Market Price" with transparent provenance tags showing which portal submitted which variation.
+
+### 2. Machine Learning Anomaly Detection (Isolation Forest & Spatial Autoencoders)
+- **The Problem**: Current forensic filtering relies on hard deterministic heuristics (negative price, floor > total floors, swapped coordinates, carpet > SBUA). However, sophisticated broker fraud (e.g., artificial appreciation, synthetic comps, or bait pricing slightly above our ₹50,000 threshold) escapes rule-based filters.
+- **The 48-Hour Solution**: Train an unsupervised **Isolation Forest + Spatial Autoencoder** model using Python / ONNX runtime directly in the Node.js pipeline:
+  - Feature vectors: `(price_per_sqft, floor_ratio, locality_median_distance, broker_post_velocity, time_to_delist)`.
+  - Output: A continuous **"Integrity Risk Score (0–100)"** displayed as a badge on every listing card and 3D building spire.
+
+### 3. Solar Trajectory & Shadow Simulation on the 3D Building Map
+- **The Problem**: Indian homebuyers in Bangalore / Bellandur prioritize natural light, Vaastu, and ventilation, but static photos cannot communicate seasonal sunlight angles.
+- **The 48-Hour Solution**: Expand the Three.js WebGL engine (`ThreeBuildingMap.jsx`) with a real-time **Bangalore Solar Ephemeris Simulator** (`12.9716° N, 77.5946° E`):
+  - Add a daytime scrub slider (06:00 AM to 06:30 PM) calculating exact sun position, casting accurate building shadows across the Outer Ring Road and balcony facing directions (`facing_direction: North/East/South/West`).
+  - Enable buyers to click their apartment floor level and inspect direct sunlight hours across Summer and Winter solstices.
+
+### 4. Algorithmic Automated Valuation Model (AVM) for Instant Cash Offers
+- **The Problem**: Homeowners seeking liquidity need instant, reliable cash valuation without broker bias or manual property inspections.
+- **The 48-Hour Solution**: Implement an algorithmic **Instant Liquidity Engine** connecting audited Bellandur transaction rates (`₹9,840/sqft` median, project appreciation trends) directly into a homeowner valuation portal:
+  - Generates 3 tiered cash-offer options: *Instant Liquidity (14 Days, 92% market rate)*, *Guaranteed Sale (60 Days, 97% market rate)*, and *Managed Marketplace Listing*.
+  - Displays holding cost savings analysis (maintenance, EMI interest, broker fees).
+
+### 5. Multi-City Expansion & Live WebSocket Stream
+- **The Problem**: The backend database currently mirrors Bangalore, but the architecture should seamlessly scale nationally.
+- **The 48-Hour Solution**: Parameterize the database schema to support **Mumbai (Powai, Bandra)**, **Delhi NCR (Gurugram, Noida)**, and **Hyderabad**:
+  - Connect a WebSocket pub/sub stream so that newly detected corrupt or bait listings are pushed in real time to the admin audit console without requiring page refreshes.
 
 ---
 
