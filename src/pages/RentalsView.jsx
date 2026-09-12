@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   KeyRound, Search, MapPin, BedDouble, Bath, Maximize2, 
-  RotateCcw, ShieldCheck, ChevronLeft, ChevronRight, CheckCircle2, Sparkles
+  ChevronLeft, ChevronRight, Sparkles
 } from 'lucide-react';
 import { API, formatINR, ASSIGNED_LOCALITY, CITY } from '../services/api';
 import PropertySkeleton from '../components/PropertySkeleton';
@@ -111,50 +111,50 @@ export default function RentalsView({ user, onOpenLogin }) {
     <div className="min-h-screen pb-20">
       
       {/* Header Banner */}
-      <section className="bg-gradient-to-b from-slate-900 via-slate-900/60 to-slate-950 border-b border-slate-800/80 pt-10 pb-12">
+      <section className="bg-slate-50 border-b border-slate-200/80 pt-10 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div>
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-3">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#EBEDFF] border border-[#d2d7ff] text-[#0018A8] text-xs font-bold uppercase tracking-wider mb-3">
                 <KeyRound className="w-3.5 h-3.5" />
                 <span>Verified Rental Portals · {CITY}</span>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
                 Rental Homes in {CITY}
               </h1>
-              <p className="mt-2 text-sm text-slate-400 max-w-xl">
-                Browse rental units with transparent monthly rent, security deposits, and maintenance charges.
+              <p className="mt-2 text-sm text-slate-600 max-w-xl">
+                Browse rental units with transparent monthly rent, security deposits, and verified maintenance charges.
               </p>
             </div>
 
             {/* Assigned Locality Highlight (Question 5) */}
             <motion.div 
-              whileHover={{ scale: 1.02 }}
-              className="bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-emerald-500/40 rounded-3xl p-5 shadow-2xl shadow-emerald-950/40 max-w-md"
+              whileHover={{ scale: 1.015 }}
+              className="bg-white border-2 border-[#0018A8]/30 rounded-3xl p-5 shadow-sm max-w-md"
             >
               <div className="flex items-center justify-between text-xs mb-2">
-                <span className="font-bold text-emerald-400 uppercase tracking-wider flex items-center space-x-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span className="font-bold text-[#0018A8] uppercase tracking-wider flex items-center space-x-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                   <span>Assigned Locality: {ASSIGNED_LOCALITY}</span>
                 </span>
-                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">
-                  Q5 Verified
+                <span className="text-[10px] bg-[#EBEDFF] text-[#0018A8] px-2 py-0.5 rounded-full font-bold">
+                  Q5 Audited
                 </span>
               </div>
               
-              <div className="text-2xl sm:text-3xl font-black text-white">
+              <div className="text-2xl sm:text-3xl font-black text-slate-900">
                 {formatINR(bellandurStats.totalRent)}
-                <span className="text-xs text-slate-400 font-normal"> / month</span>
+                <span className="text-xs text-slate-500 font-normal"> / month</span>
               </div>
               
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                Exact sum of monthly rent across all {bellandurStats.count} retrievable rental units in {ASSIGNED_LOCALITY}.
+              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                Exact sum of monthly rent across all {bellandurStats.count} verified rental units in {ASSIGNED_LOCALITY}.
               </p>
 
               <button
                 onClick={() => { setLocality(ASSIGNED_LOCALITY); setPage(1); }}
-                className="mt-3 w-full py-2 px-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition-colors flex items-center justify-center space-x-1"
+                className="mt-3 w-full py-2 px-3 rounded-xl bg-[#EBEDFF] hover:bg-[#dce2ff] border border-[#d2d7ff] text-[#0018A8] text-xs font-bold transition-colors flex items-center justify-center space-x-1 cursor-pointer"
               >
                 <span>Filter to {ASSIGNED_LOCALITY} Units ({bellandurStats.count})</span>
               </button>
@@ -169,35 +169,35 @@ export default function RentalsView({ user, onOpenLogin }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         
         {/* Filters Bar */}
-        <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 mb-8 shadow-xl">
+        <div className="bg-white border border-slate-200 rounded-3xl p-5 mb-8 shadow-xs">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             
             {/* Search */}
             <div className="lg:col-span-2">
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+              <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">
                 Search Title or Apartment
               </label>
               <div className="relative">
-                <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                   placeholder="e.g. Sobha Meadows, Bellandur..."
-                  className="w-full pl-10 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full pl-10 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-[#0018A8] transition-colors"
                 />
               </div>
             </div>
 
             {/* Locality */}
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+              <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">
                 Locality
               </label>
               <select
                 value={locality}
                 onChange={(e) => { setLocality(e.target.value); setPage(1); }}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white capitalize focus:outline-none focus:border-emerald-500 transition-colors"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 capitalize focus:outline-none focus:border-[#0018A8] transition-colors cursor-pointer"
               >
                 {LOCALITIES.map((loc) => (
                   <option key={loc} value={loc}>
@@ -210,13 +210,13 @@ export default function RentalsView({ user, onOpenLogin }) {
 
             {/* BHK */}
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+              <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">
                 Bedrooms
               </label>
               <select
                 value={bhk}
                 onChange={(e) => { setBhk(e.target.value); setPage(1); }}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-[#0018A8] transition-colors cursor-pointer"
               >
                 {BHK_OPTIONS.map((b) => (
                   <option key={b} value={b}>
@@ -228,13 +228,13 @@ export default function RentalsView({ user, onOpenLogin }) {
 
             {/* Sort */}
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+              <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">
                 Sort By
               </label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-[#0018A8] transition-colors cursor-pointer"
               >
                 <option value="rent_asc">Rent: Low to High</option>
                 <option value="rent_desc">Rent: High to Low</option>
@@ -246,11 +246,11 @@ export default function RentalsView({ user, onOpenLogin }) {
         </div>
 
         {/* Results Header */}
-        <div className="flex items-center justify-between mb-6 text-sm text-slate-400">
+        <div className="flex items-center justify-between mb-6 text-sm text-slate-500">
           <div>
-            Showing <span className="font-bold text-white">{sortedRentals.length}</span> rental properties
+            Showing <span className="font-bold text-slate-900">{sortedRentals.length}</span> rental properties
           </div>
-          <div>Page {currentPage} of {totalPages}</div>
+          <div className="text-xs text-slate-400">Page {currentPage} of {totalPages}</div>
         </div>
 
         {/* Grid with Skeleton loading */}
@@ -266,71 +266,71 @@ export default function RentalsView({ user, onOpenLogin }) {
                 <motion.div
                   key={r.listing_id}
                   layout
-                  initial={{ opacity: 0, y: 14 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96 }}
-                  whileHover={{ y: -6, scale: 1.015 }}
+                  whileHover={{ y: -5 }}
                   transition={{ duration: 0.25, ease: 'easeOut' }}
                   onClick={() => setSelectedRental(r)}
-                  className="bg-slate-900/85 hover:bg-slate-900 border border-slate-800 hover:border-emerald-500/40 rounded-3xl p-6 shadow-xl hover:shadow-2xl hover:shadow-emerald-950/30 flex flex-col justify-between will-change-transform cursor-pointer transition-all group"
+                  className="bg-white border border-slate-200 hover:border-[#0018A8]/40 rounded-3xl p-6 shadow-sm hover:shadow-[0_16px_32px_-8px_rgba(0,24,168,0.12)] flex flex-col justify-between will-change-transform cursor-pointer transition-all group"
                 >
                   <div>
                     <div className="flex items-center justify-between text-xs mb-3">
-                      <span className="px-2.5 py-0.5 rounded-full font-bold uppercase bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                      <span className="px-2.5 py-0.5 rounded-full font-bold uppercase bg-slate-100 text-slate-700 border border-slate-200">
                         {r.website}
                       </span>
-                      <span className="capitalize font-semibold text-slate-400 flex items-center space-x-1">
-                        <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="capitalize font-bold text-slate-600 flex items-center space-x-1">
+                        <MapPin className="w-3.5 h-3.5 text-[#0018A8]" />
                         <span>{r.locality}</span>
                       </span>
                     </div>
 
-                    <h3 className="text-base font-bold text-white line-clamp-1 mb-1 group-hover:text-emerald-400 transition-colors">
+                    <h3 className="text-base font-bold text-slate-900 line-clamp-1 mb-1 group-hover:text-[#0018A8] transition-colors">
                       {r.title || `${r.bedroom} BHK in ${r.apartment_name}`}
                     </h3>
-                    <div className="text-xs text-slate-400 mb-4 line-clamp-1">
+                    <div className="text-xs text-slate-500 mb-4 line-clamp-1 font-medium">
                       {r.apartment_name}
                     </div>
 
                     {/* Pricing Box */}
-                    <div className="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/80 mb-4">
-                      <div className="flex items-baseline justify-between">
-                        <div className="text-xl font-black text-emerald-400">
+                    <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 mb-4">
+                      <div className="flex items-baseline justify-between flex-wrap gap-1">
+                        <div className="text-xl font-black text-[#0018A8]">
                           {formatINR(r.price)}
-                          <span className="text-xs text-slate-400 font-normal"> / mo</span>
+                          <span className="text-xs text-slate-500 font-normal"> / mo</span>
                         </div>
-                        <div className="text-xs text-slate-400">
-                          Deposit: <span className="text-slate-200 font-semibold">{formatINR(r.deposit)}</span>
+                        <div className="text-xs text-slate-600">
+                          Deposit: <span className="text-slate-900 font-bold">{formatINR(r.deposit)}</span>
                         </div>
                       </div>
                       {r.maintenance > 0 && (
-                        <div className="text-[11px] text-slate-500 mt-1">
+                        <div className="text-[11px] text-slate-500 mt-1 font-medium">
                           + {formatINR(r.maintenance)} / mo maintenance
                         </div>
                       )}
                     </div>
 
                     {/* Specs */}
-                    <div className="grid grid-cols-3 gap-2 text-xs text-slate-300 py-3 border-y border-slate-800/80">
+                    <div className="grid grid-cols-3 gap-2 text-xs text-slate-700 py-3 border-y border-slate-100 font-medium">
                       <div className="flex items-center space-x-1.5">
-                        <BedDouble className="w-3.5 h-3.5 text-slate-500" />
+                        <BedDouble className="w-3.5 h-3.5 text-slate-400" />
                         <span>{r.bedroom} BHK</span>
                       </div>
                       <div className="flex items-center space-x-1.5">
-                        <Bath className="w-3.5 h-3.5 text-slate-500" />
+                        <Bath className="w-3.5 h-3.5 text-slate-400" />
                         <span>{r.bathroom} Baths</span>
                       </div>
                       <div className="flex items-center space-x-1.5">
-                        <Maximize2 className="w-3.5 h-3.5 text-slate-500" />
+                        <Maximize2 className="w-3.5 h-3.5 text-slate-400" />
                         <span>{r.carpet_area} sqft</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Footer */}
-                  <div className="mt-4 pt-3 flex items-center justify-between text-xs text-slate-400">
-                    <span className="capitalize">{r.furnishing}</span>
-                    <span className="text-slate-500 font-mono text-[11px]">{r.listing_id}</span>
+                  <div className="mt-4 pt-3 flex items-center justify-between text-xs text-slate-500">
+                    <span className="capitalize font-medium">{r.furnishing}</span>
+                    <span className="text-slate-400 font-mono text-[11px]">{r.listing_id}</span>
                   </div>
 
                 </motion.div>
@@ -347,11 +347,11 @@ export default function RentalsView({ user, onOpenLogin }) {
               whileTap={{ scale: 0.95 }}
               onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 300, behavior: 'smooth' }); }}
               disabled={currentPage === 1}
-              className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white disabled:opacity-30 transition-colors"
+              className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 shadow-2xs disabled:opacity-30 transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </motion.button>
-            <span className="px-3 text-sm font-semibold text-emerald-400">
+            <span className="px-3 text-sm font-semibold text-[#0018A8]">
               {currentPage} / {totalPages}
             </span>
             <motion.button
@@ -359,7 +359,7 @@ export default function RentalsView({ user, onOpenLogin }) {
               whileTap={{ scale: 0.95 }}
               onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 300, behavior: 'smooth' }); }}
               disabled={currentPage === totalPages}
-              className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white disabled:opacity-30 transition-colors"
+              className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 shadow-2xs disabled:opacity-30 transition-colors cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </motion.button>

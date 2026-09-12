@@ -68,7 +68,7 @@ export default function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-blue-600 selection:text-white">
+      <div className="min-h-screen bg-white text-slate-900 flex flex-col selection:bg-[#0018A8] selection:text-white">
         
         {/* Navigation */}
         <Navbar 
@@ -153,29 +153,29 @@ export default function App() {
         />
 
         {/* Global Footer */}
-        <footer className="border-t border-slate-800/80 bg-slate-950/90 py-10 mt-auto">
+        <footer className="border-t border-slate-200/80 bg-slate-50 py-10 mt-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
             
             <div className="flex items-center space-x-3">
               <IvyLogo className="h-6 w-auto" />
               <div>
-                <div className="text-[11px] text-slate-400">
+                <div className="text-[11px] text-slate-500 font-medium">
                   Software Engineering Internship Assignment · September 2026
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center space-x-6 text-xs text-slate-400 font-medium">
-              <span>Candidate: <strong className="text-white">Akash Kumar Prasad</strong></span>
+            <div className="flex items-center space-x-6 text-xs text-slate-600 font-medium">
+              <span>Candidate: <strong className="text-slate-900">Akash Kumar Prasad</strong></span>
               <span>·</span>
-              <span className="font-mono text-emerald-400">MNNIT Allahabad</span>
+              <span className="font-semibold text-blue-700">MNNIT Allahabad</span>
               <span>·</span>
-              <span>City: <strong className="text-white">{CITY}</strong></span>
+              <span>City: <strong className="text-slate-900">{CITY}</strong></span>
             </div>
 
-            <div className="flex items-center space-x-4 text-xs text-slate-400">
-              <span className="flex items-center space-x-1 text-emerald-400">
-                <ShieldCheck className="w-4 h-4" />
+            <div className="flex items-center space-x-4 text-xs text-slate-600">
+              <span className="flex items-center space-x-1.5 text-emerald-700 font-semibold bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/80">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" />
                 <span>Audited API Behavior</span>
               </span>
             </div>

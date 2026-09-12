@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { 
   X, Lock, Mail, CheckCircle2, AlertCircle, KeyRound, 
-  Sparkles, ShieldCheck, ArrowRight, RefreshCw, Box, Layers
+  Sparkles, ShieldCheck, ArrowRight, RefreshCw
 } from 'lucide-react';
 import { Auth, DEMO_USERS, DEMO_PASSWORD } from '../services/api';
 import ThreeLoginScene from './ThreeLoginScene';
@@ -27,8 +27,8 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, initialEma
   const mouseXSpring = useSpring(x, { stiffness: 220, damping: 22 });
   const mouseYSpring = useSpring(y, { stiffness: 220, damping: 22 });
 
-  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ['14deg', '-14deg']);
-  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ['-16deg', '16deg']);
+  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ['10deg', '-10deg']);
+  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ['-12deg', '12deg']);
   const glareX = useTransform(mouseXSpring, [-0.5, 0.5], ['0%', '100%']);
   const glareY = useTransform(mouseYSpring, [-0.5, 0.5], ['0%', '100%']);
 
@@ -89,7 +89,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, initialEma
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
             onClick={onClose}
-            className="absolute inset-0 bg-slate-950/85 backdrop-blur-md overflow-hidden"
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-md overflow-hidden"
           >
             <ThreeLoginScene />
           </motion.div>
@@ -104,7 +104,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, initialEma
               rotateY,
               transformStyle: 'preserve-3d',
             }}
-            initial={{ opacity: 0, scale: 0.88, y: 35, rotateX: 20 }}
+            initial={{ opacity: 0, scale: 0.9, y: 30 }}
             animate={{ 
               opacity: 1, 
               scale: 1, 
@@ -113,16 +113,16 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, initialEma
             }}
             exit={{ 
               opacity: 0, 
-              scale: 0.9, 
+              scale: 0.92, 
               y: 20, 
-              transition: { duration: 0.22 } 
+              transition: { duration: 0.2 } 
             }}
-            className="relative w-full max-w-md bg-gradient-to-b from-slate-900/95 via-slate-900/95 to-slate-950/98 border border-slate-700/80 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-blue-950/60 z-10 backdrop-blur-2xl transition-shadow duration-300 hover:shadow-blue-500/20"
+            className="relative w-full max-w-md bg-white/95 border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl z-10 backdrop-blur-2xl transition-shadow duration-300"
           >
             {/* Dynamic Specular Sheen Layer reacting to 3D tilt */}
             <motion.div
               style={{
-                background: `radial-gradient(circle at ${glareX} ${glareY}, rgba(59, 130, 246, 0.22), transparent 70%)`,
+                background: `radial-gradient(circle at ${glareX} ${glareY}, rgba(0, 24, 168, 0.08), transparent 70%)`,
               }}
               className="absolute inset-0 rounded-3xl pointer-events-none"
             />
@@ -133,7 +133,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, initialEma
               whileHover={{ scale: 1.15, rotate: 90 }}
               whileTap={{ scale: 0.9 }}
               onClick={onClose}
-              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors z-20 cursor-pointer"
+              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors z-20 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </motion.button>
@@ -143,31 +143,31 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, initialEma
               style={{ transform: 'translateZ(40px)' }} 
               className="flex items-center space-x-3.5 mb-6"
             >
-              <div className="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 shadow-lg shadow-blue-500/20">
+              <div className="w-12 h-12 rounded-2xl bg-[#EBEDFF] border border-[#d2d7ff] flex items-center justify-center text-[#0018A8]">
                 <Lock className="w-6 h-6" />
               </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <h2 className="text-xl font-black text-white tracking-tight">Ivy Homes Login</h2>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                  <h2 className="text-xl font-black text-slate-900 tracking-tight">Ivy Homes Login</h2>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[#EBEDFF] text-[#0018A8] border border-[#d2d7ff]">
                     3D Auth
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">Direct JWT verification against Ivy Homes API</p>
+                <p className="text-xs text-slate-500 mt-0.5 font-medium">Direct JWT verification against Ivy Homes API</p>
               </div>
             </div>
 
             {/* Quick Demo Switcher with 3D Depth */}
             <div 
               style={{ transform: 'translateZ(25px)' }} 
-              className="mb-6 bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/90 shadow-inner"
+              className="mb-6 bg-slate-50 p-3.5 rounded-2xl border border-slate-200"
             >
-              <div className="flex items-center justify-between text-xs font-semibold text-slate-300 mb-2.5">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-600 mb-2.5">
                 <span className="flex items-center space-x-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
                   <span>Select Demo Account</span>
                 </span>
-                <span className="text-[10px] text-slate-500 font-mono">1-CLICK FILL</span>
+                <span className="text-[10px] text-slate-400 font-mono">1-CLICK FILL</span>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {DEMO_USERS.map((u) => {
@@ -177,13 +177,13 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, initialEma
                     <motion.button
                       key={u.email}
                       type="button"
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      whileTap={{ scale: 0.95 }}
+                      whileHover={{ scale: 1.04, y: -2 }}
+                      whileTap={{ scale: 0.96 }}
                       onClick={() => handleSelectDemo(u.email)}
                       className={`py-2 px-2.5 rounded-xl text-xs font-medium text-center transition-all border cursor-pointer ${
                         isSelected
-                          ? 'bg-blue-600/25 border-blue-500 text-blue-200 shadow-md shadow-blue-500/25'
-                          : 'bg-slate-900/90 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                          ? 'bg-[#EBEDFF] border-[#0018A8] text-[#0018A8] font-bold shadow-xs'
+                          : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300'
                       }`}
                     >
                       <div className="font-bold capitalize">{name}</div>
@@ -197,11 +197,11 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, initialEma
             {/* Form Fields with 3D Layer Elevation */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div style={{ transform: 'translateZ(30px)' }}>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
                   Email Address
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                     <Mail className="w-4 h-4" />
                   </div>
                   <input
@@ -209,18 +209,18 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, initialEma
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950/90 border border-slate-800 focus:border-blue-500 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all shadow-inner"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0018A8] rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0018A8]/20 transition-all font-medium"
                     placeholder="name@ivy.homes"
                   />
                 </div>
               </div>
 
               <div style={{ transform: 'translateZ(30px)' }}>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wider">
                   Password
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                     <KeyRound className="w-4 h-4" />
                   </div>
                   <input
@@ -228,7 +228,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, initialEma
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-950/90 border border-slate-800 focus:border-blue-500 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all shadow-inner"
+                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[#0018A8] rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0018A8]/20 transition-all font-medium"
                     placeholder="Key password"
                   />
                 </div>
@@ -239,7 +239,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, initialEma
                   style={{ transform: 'translateZ(35px)' }}
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-start space-x-2.5 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs shadow-lg shadow-rose-500/10"
+                  className="flex items-start space-x-2.5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs shadow-2xs font-medium"
                 >
                   <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                   <span>{error}</span>
@@ -251,9 +251,9 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, initialEma
                   style={{ transform: 'translateZ(35px)' }}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-center space-x-2.5 p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-semibold shadow-lg shadow-emerald-500/20"
+                  className="flex items-center space-x-2.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold shadow-2xs"
                 >
-                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
                   <span>Authenticated! Session token active & persisted.</span>
                 </motion.div>
               )}
@@ -261,11 +261,11 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, initialEma
               {/* Action Button with 3D Push and Elevation */}
               <div style={{ transform: 'translateZ(45px)' }}>
                 <motion.button
-                  whileHover={{ scale: 1.025, y: -2 }}
+                  whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98, y: 1 }}
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-sm shadow-xl shadow-blue-600/30 transition-all disabled:opacity-50 cursor-pointer"
+                  className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl bg-[#0018A8] hover:bg-[#001385] text-white font-bold text-sm shadow-md transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? (
                     <>
@@ -285,11 +285,11 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, initialEma
             {/* Footnote */}
             <div 
               style={{ transform: 'translateZ(20px)' }}
-              className="mt-6 pt-4 border-t border-slate-800/80 flex items-start space-x-2 text-[11px] text-slate-400 leading-relaxed"
+              className="mt-6 pt-4 border-t border-slate-100 flex items-start space-x-2 text-[11px] text-slate-500 leading-relaxed font-medium"
             >
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>
-                Session auto-refreshes every 15 min via <code className="text-emerald-300 bg-slate-950 px-1 py-0.5 rounded font-mono">/auth/refresh</code> to keep credentials authenticated.
+                Session auto-refreshes every 15 min via <code className="text-[#0018A8] bg-[#EBEDFF] px-1 py-0.5 rounded font-mono font-bold">/auth/refresh</code> to keep credentials authenticated.
               </span>
             </div>
 

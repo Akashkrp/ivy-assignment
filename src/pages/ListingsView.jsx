@@ -198,19 +198,19 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
               <div className="pt-2 max-w-2xl">
                 <div className="relative flex items-center">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                    <Search className="w-5 h-5 text-blue-400" />
+                    <Search className="w-5 h-5 text-[#0018A8]" />
                   </div>
                   <input
                     type="text"
                     value={search}
                     onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                     placeholder="Search apartment, society (e.g. Prestige, Sobha), locality (Bellandur)..."
-                    className="w-full pl-12 pr-20 py-3.5 bg-slate-950/90 backdrop-blur-md border border-slate-700/80 rounded-2xl text-sm text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 shadow-xl transition-all"
+                    className="w-full pl-12 pr-20 py-3.5 bg-white text-slate-900 border border-slate-200 rounded-2xl text-sm placeholder-slate-400 focus:outline-none focus:border-[#0018A8] focus:ring-2 focus:ring-[#0018A8]/20 shadow-xl transition-all"
                   />
                   {search && (
                     <button 
                       onClick={() => setSearch('')} 
-                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-xs font-semibold text-slate-400 hover:text-white cursor-pointer"
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-xs font-semibold text-slate-500 hover:text-slate-900 cursor-pointer"
                     >
                       Clear
                     </button>
@@ -223,19 +223,19 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
                 <div className="flex flex-wrap items-center gap-3">
                   <button
                     onClick={() => onOpenLogin?.()}
-                    className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-600/30 transition-all cursor-pointer inline-flex items-center space-x-2 active:scale-95"
+                    className="px-6 py-3 rounded-xl bg-[#0018A8] hover:bg-[#001385] text-white font-bold text-sm shadow-md transition-all cursor-pointer inline-flex items-center space-x-2 active:scale-95"
                   >
                     <span>Sign In to Unlock 3,687 Listings</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
-                  <span className="text-slate-500 font-medium">1-Click Demo Login:</span>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
+                  <span className="text-slate-400 font-medium">1-Click Demo Login:</span>
                   {['demo1@ivy.homes', 'demo2@ivy.homes', 'demo3@ivy.homes'].map((demo) => (
                     <button
                       key={demo}
                       onClick={() => onOpenLogin?.(demo)}
-                      className="px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-700/80 hover:border-blue-500 text-blue-300 hover:text-white text-[11px] font-mono transition-colors cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg bg-white/95 border border-white/40 hover:bg-white text-slate-800 text-[11px] font-bold shadow-xs transition-colors cursor-pointer"
                     >
                       {demo}
                     </button>
@@ -245,25 +245,25 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
             )}
 
             {/* Proof Metrics Row */}
-            <div className="pt-2 flex flex-wrap items-center gap-4 sm:gap-6 text-xs text-slate-300">
+            <div className="pt-2 flex flex-wrap items-center gap-4 sm:gap-6 text-xs text-slate-200 font-medium">
               <div className="flex items-center space-x-2">
                 <span className="text-base font-black text-white">
                   {user ? filteredListings.length.toLocaleString() : '3,687'}
                 </span>
-                <span className="text-slate-400">Live Listings</span>
+                <span className="text-slate-300">Live Listings</span>
               </div>
-              <span className="text-slate-700">·</span>
+              <span className="text-slate-600">·</span>
               <div className="flex items-center space-x-2">
-                <span className="text-base font-black text-blue-400">850+</span>
-                <span className="text-slate-400">Homes Evaluated</span>
+                <span className="text-base font-black text-amber-300">850+</span>
+                <span className="text-slate-300">Homes Evaluated</span>
               </div>
-              <span className="text-slate-700">·</span>
+              <span className="text-slate-600">·</span>
               <div className="flex items-center space-x-2">
-                <span className="text-base font-black text-emerald-400">₹1000 Cr+</span>
-                <span className="text-slate-400">Transaction Value</span>
+                <span className="text-base font-black text-emerald-300">₹1000 Cr+</span>
+                <span className="text-slate-300">Transaction Value</span>
               </div>
-              <span className="text-slate-700">·</span>
-              <div className="flex items-center space-x-1.5 text-emerald-400 font-medium">
+              <span className="text-slate-600">·</span>
+              <div className="flex items-center space-x-1.5 text-emerald-300 font-semibold">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span>Zero Brokerage</span>
               </div>
@@ -278,16 +278,16 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 mb-16 space-y-12">
           
           {/* Unlock Portal CTA Banner */}
-          <div className="bg-gradient-to-r from-blue-950/60 via-slate-900 to-blue-950/60 border border-blue-800/50 rounded-3xl p-6 sm:p-8 text-center backdrop-blur-md shadow-2xl space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 mx-auto shadow-md">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 text-center shadow-[0_4px_24px_rgba(0,0,0,0.06)] space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#EBEDFF] text-[#0018A8] flex items-center justify-center mx-auto shadow-xs">
               <Lock className="w-6 h-6" />
             </div>
             
             <div className="space-y-1.5">
-              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                 Bangalore Property Marketplace Locked
               </h2>
-              <p className="text-xs sm:text-sm text-slate-300 max-w-lg mx-auto leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto leading-relaxed">
                 Directly explore 3,687 verified live properties across 11 Bangalore localities with dual-layer client filtering and real-time valuations.
               </p>
             </div>
@@ -295,123 +295,123 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 onClick={onOpenLogin}
-                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-600/30 transition-all cursor-pointer inline-flex items-center justify-center space-x-2 active:scale-95"
+                className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#0018A8] hover:bg-[#001385] text-white font-bold text-sm shadow-md transition-all cursor-pointer inline-flex items-center justify-center space-x-2 active:scale-95"
               >
                 <span>Sign In With Demo Account to Unlock Feed</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-400">
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500 font-medium">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>Pre-configured credentials:</span>
-              <span className="font-mono text-blue-300">demo1@ivy.homes</span>
+              <span className="font-semibold text-slate-800">demo1@ivy.homes</span>
               <span>·</span>
-              <span className="font-mono text-blue-300">demo2@ivy.homes</span>
+              <span className="font-semibold text-slate-800">demo2@ivy.homes</span>
               <span>·</span>
-              <span className="font-mono text-blue-300">demo3@ivy.homes</span>
+              <span className="font-semibold text-slate-800">demo3@ivy.homes</span>
             </div>
           </div>
 
           {/* Slogan & Cost of Waiting 1 Year Section */}
           <section className="text-center space-y-6">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-wider">
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-[#EBEDFF] border border-[#d2d7ff] text-[#0018A8] text-xs font-bold uppercase tracking-wider">
               <span>WHY SELL TO US</span>
             </div>
 
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Every month unsold is <span className="text-blue-400">a cost you are absorbing.</span>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              Every month unsold is <span className="text-[#0018A8]">a cost you are absorbing.</span>
             </h2>
 
-            <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
               Most sellers think about price. Few count what waiting actually costs. Here is what one year on the open market looks like for a typical 2 BHK in Bangalore.
             </p>
 
             {/* Bangalore Cost of Waiting Calculator Card */}
-            <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 text-left shadow-xl">
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 text-left shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
               
-              <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-800">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-100">
                 <div className="flex items-center space-x-2">
-                  <span className="px-2.5 py-1 rounded-md bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider">
+                  <span className="px-2.5 py-1 rounded-md bg-[#0018A8] text-white text-[10px] font-bold uppercase tracking-wider">
                     CALCULATOR
                   </span>
-                  <span className="text-xs font-semibold text-slate-400">
+                  <span className="text-xs font-semibold text-slate-500">
                     1 Year · 2 BHK · Typical Bangalore Market Value (₹1.05 Cr)
                   </span>
                 </div>
               </div>
 
               <div className="mt-5 mb-2">
-                <h3 className="text-base sm:text-lg font-bold text-white">The hidden cost of waiting 1 year</h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900">The hidden cost of waiting 1 year</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
                   These are the actual carrying costs a seller absorbs while waiting for the right buyer to show up.
                 </p>
               </div>
 
               {/* Table / Cost Breakdown */}
-              <div className="mt-4 space-y-3 bg-slate-950/80 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-inner text-slate-200">
+              <div className="mt-4 space-y-3 bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200/80 text-slate-800">
                 
-                <div className="flex items-center justify-between py-2 border-b border-slate-800/80 text-xs sm:text-sm">
+                <div className="flex items-center justify-between py-2 border-b border-slate-200/60 text-xs sm:text-sm">
                   <div>
-                    <div className="font-semibold text-white">Maintenance charges</div>
+                    <div className="font-semibold text-slate-900">Maintenance charges</div>
                     <div className="text-[11px] text-slate-500">Avg ₹8,000/mo × 12 months</div>
                   </div>
-                  <div className="font-bold text-white font-mono">₹97,000</div>
+                  <div className="font-bold text-slate-900 font-mono">₹97,000</div>
                 </div>
 
-                <div className="flex items-center justify-between py-2 border-b border-slate-800/80 text-xs sm:text-sm">
+                <div className="flex items-center justify-between py-2 border-b border-slate-200/60 text-xs sm:text-sm">
                   <div>
-                    <div className="font-semibold text-white">Lost rental income</div>
+                    <div className="font-semibold text-slate-900">Lost rental income</div>
                     <div className="text-[11px] text-slate-500">Unoccupied property × 12 months @ ₹35,000/mo</div>
                   </div>
-                  <div className="font-bold text-white font-mono">₹4,20,000</div>
+                  <div className="font-bold text-slate-900 font-mono">₹4,20,000</div>
                 </div>
 
-                <div className="flex items-center justify-between py-2 border-b border-slate-800/80 text-xs sm:text-sm">
+                <div className="flex items-center justify-between py-2 border-b border-slate-200/60 text-xs sm:text-sm">
                   <div>
-                    <div className="font-semibold text-white">Broker fee on eventual sale</div>
+                    <div className="font-semibold text-slate-900">Broker fee on eventual sale</div>
                     <div className="text-[11px] text-slate-500">Standard 2% brokerage on sale price</div>
                   </div>
-                  <div className="font-bold text-white font-mono">₹2,10,000</div>
+                  <div className="font-bold text-slate-900 font-mono">₹2,10,000</div>
                 </div>
 
-                <div className="flex items-center justify-between py-2 border-b border-slate-800/80 text-xs sm:text-sm">
+                <div className="flex items-center justify-between py-2 border-b border-slate-200/60 text-xs sm:text-sm">
                   <div>
-                    <div className="font-semibold text-white">Price risk</div>
+                    <div className="font-semibold text-slate-900">Price risk</div>
                     <div className="text-[11px] text-slate-500">Market corrections & aggressive buyer negotiations</div>
                   </div>
-                  <div className="font-semibold text-amber-400 text-xs">Uncertain</div>
+                  <div className="font-semibold text-amber-700 text-xs">Uncertain</div>
                 </div>
 
                 <div className="flex items-center justify-between pt-3 text-sm sm:text-base">
                   <div>
-                    <div className="font-black text-white">Total estimated cost of waiting 1 year</div>
+                    <div className="font-black text-slate-900">Total estimated cost of waiting 1 year</div>
                     <div className="text-[11px] text-slate-500">Includes direct carrying costs & brokerage fees</div>
                   </div>
-                  <div className="text-xl sm:text-2xl font-black text-blue-400 font-sans">₹7.8 L+</div>
+                  <div className="text-xl sm:text-2xl font-black text-[#0018A8] font-sans">₹7.8 L+</div>
                 </div>
 
               </div>
 
               {/* Bottom Guarantee Badges */}
               <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-center">
-                  <div className="text-base font-black text-blue-400">₹0</div>
-                  <div className="text-[11px] font-semibold text-slate-400 mt-0.5">In hidden fees</div>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                  <div className="text-base font-black text-[#0018A8]">₹0</div>
+                  <div className="text-[11px] font-semibold text-slate-600 mt-0.5">In hidden fees</div>
                 </div>
 
-                <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-center">
-                  <div className="text-base font-black text-blue-400">₹0</div>
-                  <div className="text-[11px] font-semibold text-slate-400 mt-0.5">Broker commission</div>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                  <div className="text-base font-black text-[#0018A8]">₹0</div>
+                  <div className="text-[11px] font-semibold text-slate-600 mt-0.5">Broker commission</div>
                 </div>
 
-                <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-3 text-center">
-                  <div className="text-base font-black text-blue-400">60 Days</div>
-                  <div className="text-[11px] font-semibold text-slate-400 mt-0.5">Cash in hand</div>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                  <div className="text-base font-black text-[#0018A8]">60 Days</div>
+                  <div className="text-[11px] font-semibold text-slate-600 mt-0.5">Cash in hand</div>
                 </div>
               </div>
 
-              <div className="mt-4 p-3 bg-blue-950/40 border border-blue-800/40 rounded-xl text-xs text-blue-300 leading-relaxed">
+              <div className="mt-4 p-3.5 bg-[#EBEDFF] border border-[#d2d7ff] rounded-xl text-xs text-[#0018A8] leading-relaxed font-medium">
                 💡 <strong>Ivy Insight:</strong> The money saved by not waiting is often greater than any minor price variation between open-market speculation and our guaranteed instant offer.
               </div>
 
@@ -425,18 +425,18 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
           
           {/* Decluttered Filter Controls Bar */}
-          <div className="bg-slate-900/80 border border-slate-800/90 rounded-3xl p-4 sm:p-5 mb-8 shadow-xl shadow-slate-950/20">
+          <div className="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 mb-8 shadow-xs">
             
             {/* Quick Primary Filters Row */}
             <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
               
               {/* Locality Selector */}
               <div className="flex items-center space-x-2 min-w-[200px]">
-                <MapPin className="w-4 h-4 text-blue-400 shrink-0" />
+                <MapPin className="w-4 h-4 text-[#0018A8] shrink-0" />
                 <select
                   value={locality}
                   onChange={(e) => { setLocality(e.target.value); setPage(1); }}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs sm:text-sm text-white capitalize focus:outline-none focus:border-blue-500 cursor-pointer"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-800 font-medium capitalize focus:outline-none focus:border-[#0018A8] cursor-pointer"
                 >
                   {LOCALITIES.map((loc) => (
                     <option key={loc} value={loc}>
@@ -449,7 +449,7 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
 
               {/* BHK Pills */}
               <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
-                <span className="text-xs font-semibold text-slate-400 mr-1 hidden sm:inline">Bedrooms:</span>
+                <span className="text-xs font-semibold text-slate-500 mr-1 hidden sm:inline">Bedrooms:</span>
                 {BHK_OPTIONS.map((b) => {
                   const isSelected = bhk === b;
                   return (
@@ -458,8 +458,8 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
                       onClick={() => { setBhk(b); setPage(1); }}
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
                         isSelected
-                          ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                          : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800 hover:border-slate-700'
+                          ? 'bg-[#0018A8] text-white shadow-xs'
+                          : 'bg-slate-50 text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300'
                       }`}
                     >
                       {b === 'all' ? 'Any BHK' : `${b} BHK`}
@@ -471,11 +471,11 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
               {/* Sort Dropdown & More Filters Button */}
               <div className="flex items-center space-x-2">
                 <div className="flex items-center space-x-1.5">
-                  <ArrowUpDown className="w-4 h-4 text-slate-500 shrink-0" />
+                  <ArrowUpDown className="w-4 h-4 text-slate-400 shrink-0" />
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-blue-500 cursor-pointer"
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs sm:text-sm text-slate-800 font-medium focus:outline-none focus:border-[#0018A8] cursor-pointer"
                   >
                     <option value="posted_desc">Newest First</option>
                     <option value="price_asc">Price: Low to High</option>
@@ -488,14 +488,14 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
                   onClick={() => setShowMoreFilters(!showMoreFilters)}
                   className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer border ${
                     showMoreFilters || activeExtraFilterCount > 0
-                      ? 'bg-blue-600/20 border-blue-500 text-blue-300'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                      ? 'bg-[#EBEDFF] border-[#0018A8] text-[#0018A8]'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5" />
                   <span>Filters</span>
                   {activeExtraFilterCount > 0 && (
-                    <span className="w-4 h-4 rounded-full bg-blue-500 text-white text-[10px] flex items-center justify-center font-bold">
+                    <span className="w-4 h-4 rounded-full bg-[#0018A8] text-white text-[10px] flex items-center justify-center font-bold">
                       {activeExtraFilterCount}
                     </span>
                   )}
@@ -505,7 +505,7 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
                   <button
                     onClick={resetFilters}
                     title="Reset all filters"
-                    className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
+                    className="p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 hover:text-rose-600 transition-colors cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                   </button>
@@ -522,17 +522,17 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="overflow-hidden pt-4 mt-4 border-t border-slate-800/80"
+                  className="overflow-hidden pt-4 mt-4 border-t border-slate-100"
                 >
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                      <label className="block text-[11px] font-bold text-slate-500 mb-1 uppercase tracking-wider">
                         Property Type
                       </label>
                       <select
                         value={propType}
                         onChange={(e) => { setPropType(e.target.value); setPage(1); }}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white capitalize focus:outline-none focus:border-blue-500 cursor-pointer"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 font-medium capitalize focus:outline-none focus:border-[#0018A8] cursor-pointer"
                       >
                         {PROPERTY_TYPES.map((pt) => (
                           <option key={pt} value={pt}>
@@ -543,13 +543,13 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                      <label className="block text-[11px] font-bold text-slate-500 mb-1 uppercase tracking-wider">
                         Furnishing
                       </label>
                       <select
                         value={furnishing}
                         onChange={(e) => { setFurnishing(e.target.value); setPage(1); }}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white capitalize focus:outline-none focus:border-blue-500 cursor-pointer"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 font-medium capitalize focus:outline-none focus:border-[#0018A8] cursor-pointer"
                       >
                         {FURNISHING_OPTIONS.map((f) => (
                           <option key={f} value={f}>
@@ -560,7 +560,7 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                      <label className="block text-[11px] font-bold text-slate-500 mb-1 uppercase tracking-wider">
                         Min Price (₹)
                       </label>
                       <input
@@ -568,12 +568,12 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
                         value={minPrice}
                         onChange={(e) => { setMinPrice(e.target.value); setPage(1); }}
                         placeholder="e.g. 5000000"
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 font-medium focus:outline-none focus:border-[#0018A8]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-400 mb-1">
+                      <label className="block text-[11px] font-bold text-slate-500 mb-1 uppercase tracking-wider">
                         Max Price (₹)
                       </label>
                       <input
@@ -581,28 +581,28 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
                         value={maxPrice}
                         onChange={(e) => { setMaxPrice(e.target.value); setPage(1); }}
                         placeholder="e.g. 20000000"
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 font-medium focus:outline-none focus:border-[#0018A8]"
                       />
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-4 mt-4 pt-3 border-t border-slate-800/50 text-xs">
-                    <label className="flex items-center space-x-2 text-slate-300 cursor-pointer">
+                  <div className="flex flex-wrap items-center gap-4 mt-4 pt-3 border-t border-slate-100 text-xs">
+                    <label className="flex items-center space-x-2 text-slate-700 font-medium cursor-pointer">
                       <input
                         type="checkbox"
                         checked={activeOnly}
                         onChange={(e) => { setActiveOnly(e.target.checked); setPage(1); }}
-                        className="rounded border-slate-700 text-blue-600 focus:ring-blue-500 bg-slate-950"
+                        className="rounded border-slate-300 text-[#0018A8] focus:ring-[#0018A8] bg-white"
                       />
                       <span>Live Properties Only</span>
                     </label>
 
-                    <label className="flex items-center space-x-2 text-slate-300 cursor-pointer">
+                    <label className="flex items-center space-x-2 text-slate-700 font-medium cursor-pointer">
                       <input
                         type="checkbox"
                         checked={hideAnomalies}
                         onChange={(e) => { setHideAnomalies(e.target.checked); setPage(1); }}
-                        className="rounded border-slate-700 text-blue-600 focus:ring-blue-500 bg-slate-950"
+                        className="rounded border-slate-300 text-[#0018A8] focus:ring-[#0018A8] bg-white"
                       />
                       <span>Filter Corrupt Data & Enquiry Bait Listings</span>
                     </label>
@@ -615,11 +615,11 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
 
           {/* Results Header */}
           <div className="flex items-center justify-between mb-6">
-            <div className="text-sm text-slate-400 font-medium">
-              Showing <span className="font-bold text-white">{sortedListings.length}</span> matching properties
+            <div className="text-sm text-slate-500 font-medium">
+              Showing <span className="font-bold text-slate-900">{sortedListings.length}</span> matching properties
               {hideAnomalies && ' (excluding corrupt/fake records)'}
             </div>
-            <div className="text-xs text-slate-500 font-medium">
+            <div className="text-xs text-slate-400 font-medium">
               Page {currentPage} of {totalPages}
             </div>
           </div>
@@ -628,15 +628,15 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
           {loading ? (
             <PropertySkeleton count={12} />
           ) : pagedListings.length === 0 ? (
-            <div className="text-center py-20 bg-slate-900/40 rounded-3xl border border-slate-800/80 p-8">
-              <Home className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-              <h3 className="text-lg font-bold text-slate-200">No properties matched your criteria</h3>
-              <p className="text-sm text-slate-400 mt-1 max-w-md mx-auto">
+            <div className="text-center py-20 bg-slate-50 rounded-3xl border border-slate-200 p-8">
+              <Home className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+              <h3 className="text-lg font-bold text-slate-800">No properties matched your criteria</h3>
+              <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
                 Try clearing filters or search terms to broaden your results.
               </p>
               <button
                 onClick={resetFilters}
-                className="mt-5 px-4 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 font-semibold text-xs border border-blue-500/30 transition-colors"
+                className="mt-5 px-4 py-2 rounded-xl bg-[#EBEDFF] hover:bg-[#dce2ff] text-[#0018A8] font-bold text-xs border border-[#d2d7ff] transition-colors cursor-pointer"
               >
                 Reset Filters
               </button>
@@ -667,15 +667,15 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
                 whileTap={{ scale: 0.95 }}
                 onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 300, behavior: 'smooth' }); }}
                 disabled={currentPage === 1}
-                className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 shadow-2xs disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
               </motion.button>
 
               <div className="flex items-center space-x-1 px-3 text-sm font-semibold">
-                <span className="text-blue-400">{currentPage}</span>
-                <span className="text-slate-600">/</span>
-                <span className="text-slate-400">{totalPages}</span>
+                <span className="text-[#0018A8] font-bold">{currentPage}</span>
+                <span className="text-slate-400">/</span>
+                <span className="text-slate-600">{totalPages}</span>
               </div>
 
               <motion.button
@@ -683,7 +683,7 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
                 whileTap={{ scale: 0.95 }}
                 onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 300, behavior: 'smooth' }); }}
                 disabled={currentPage === totalPages}
-                className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 shadow-2xs disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
               >
                 <ChevronRight className="w-4 h-4" />
               </motion.button>
