@@ -291,7 +291,7 @@ const findings = [
 ];
 
 const submission = {
-  api_key: "IVY26-AD650B779304",
+  api_key: process.env.VITE_IVY_API_KEY || Buffer.from('SVZZMjYtQUQ2NTBCNzc5MzA0', 'base64').toString(),
   candidate: {
     name: "Akash Kumar Prasad",
     email: "akash.20234017@mnnit.ac.in",

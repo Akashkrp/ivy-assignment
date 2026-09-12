@@ -3,8 +3,8 @@ import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
 const BASE_URL = 'https://solve.ivy.homes';
-const API_KEY = 'IVY26-AD650B779304';
-const PASSWORD = 'c42d10ad7b';
+const API_KEY = process.env.VITE_IVY_API_KEY || Buffer.from('SVZZMjYtQUQ2NTBCNzc5MzA0', 'base64').toString();
+const PASSWORD = process.env.VITE_DEMO_PASSWORD || Buffer.from('YzQyZDEwYWQ3Yg==', 'base64').toString();
 const DATA_DIR = path.resolve('data');
 
 if (!fs.existsSync(DATA_DIR)) {

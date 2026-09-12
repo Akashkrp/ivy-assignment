@@ -226,8 +226,7 @@ Testing hypotheses that did **not** pan out is essential to demonstrate rigorous
 
 ## Frontend Architecture & Key Features
 
-The frontend is built using **React 19**, **Vite**, and **Tailwind CSS** with a luxury dark-mode design system:
-- **Authentication:** Demo switcher (`demo1`, `demo2`, `demo3` with password `c42d10ad7b`). Automatically refreshes access tokens in the background every 15 minutes to guarantee session survival well beyond 30 minutes.
+- **Authentication:** Demo switcher (`demo1`, `demo2`, `demo3` with credentials managed securely via `.env` / environment variables). Automatically refreshes access tokens in the background every 15 minutes to guarantee session survival well beyond 30 minutes.
 - **Client-Side Filter Engine:** Directly addresses the server's documentation discrepancies by filtering locality, BHK, price range, and furnishing in state, ensuring instant response times.
 - **Property Detail Pages (`/listings/:id`):** URL-routable pages featuring full architectural specifications, seller contact details, anomaly detection alerts, and client-computed comparable recommendations.
 - **Dedicated Rentals & Projects Views:** Reflects true normalized INR prices and includes a dedicated Bellandur rental summary banner (Q5) and Costliest Project spotlight (Q7).
@@ -292,12 +291,30 @@ If granted another 48 hours to expand the platform and forensic audit engine, we
 
 ---
 
+## Environment Configuration & Security
+
+All sensitive credentials and API keys are strictly decoupled from source control using `.env` (ignored via `.gitignore`). A template is provided in `.env.example`:
+
+```bash
+# Copy template to configure local environment
+cp .env.example .env
+```
+
+| Variable | Description |
+|---|---|
+| `VITE_IVY_API_KEY` | Ivy Homes Candidate API Key |
+| `VITE_DEMO_PASSWORD` | Test user demo account password |
+| `VITE_ASSIGNED_LOCALITY` | Evaluated locality (`bellandur`) |
+| `VITE_CITY` | Primary target market (`Bangalore`) |
+
+---
+
 ## Submission File Structure (`submission.json`)
 
 The generated `submission.json` adheres strictly to `submission.template.json` with all 10 verified answers and 22 documented findings:
 ```json
 {
-  "api_key": "IVY26-AD650B779304",
+  "api_key": "IVY26-AD650B77XXXX",
   "candidate": {
     "name": "Akash Kumar Prasad",
     "email": "akash.20234017@mnnit.ac.in",

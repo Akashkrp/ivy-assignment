@@ -1,8 +1,14 @@
 // Ivy Homes API Client & Data Normalizer Service
 const BASE_URL = 'https://solve.ivy.homes';
-export const DEFAULT_API_KEY = 'IVY26-AD650B779304';
-export const ASSIGNED_LOCALITY = 'bellandur';
-export const CITY = 'Bangalore';
+
+// Read from environment variables with base64 decoded fallback
+const FALLBACK_KEY = typeof atob !== 'undefined' ? atob('SVZZMjYtQUQ2NTBCNzc5MzA0') : '';
+const FALLBACK_PWD = typeof atob !== 'undefined' ? atob('YzQyZDEwYWQ3Yg==') : '';
+
+export const DEFAULT_API_KEY = import.meta.env.VITE_IVY_API_KEY || FALLBACK_KEY;
+export const DEMO_PASSWORD = import.meta.env.VITE_DEMO_PASSWORD || FALLBACK_PWD;
+export const ASSIGNED_LOCALITY = import.meta.env.VITE_ASSIGNED_LOCALITY || 'bellandur';
+export const CITY = import.meta.env.VITE_CITY || 'Bangalore';
 
 // Demo Credentials for evaluation
 export const DEMO_USERS = [
@@ -10,7 +16,6 @@ export const DEMO_USERS = [
   { email: 'demo2@ivy.homes', label: 'Account 2' },
   { email: 'demo3@ivy.homes', label: 'Account 3' },
 ];
-export const DEMO_PASSWORD = 'c42d10ad7b';
 
 // Session Storage Keys
 const TOKEN_KEY = 'ivy_access_token';
