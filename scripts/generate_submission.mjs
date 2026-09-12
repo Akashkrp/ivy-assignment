@@ -295,8 +295,8 @@ const submission = {
   candidate: {
     name: "Akash Kumar Prasad",
     email: "akash.20234017@mnnit.ac.in",
-    repo_url: "https://github.com/akashprasad/ivy-homes",
-    demo_url: "https://ivy-homes.vercel.app"
+    repo_url: "https://github.com/Akashkrp/ivy-assignment",
+    demo_url: "https://ivy-assignment-dun.vercel.app"
   },
   answers: {
     total_listing_records: totalListingRecords,
