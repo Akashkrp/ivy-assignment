@@ -242,6 +242,20 @@ The dataset is ingested by `scripts/ingest.mjs` into both structured JSON and a 
 
 ---
 
+## 3D Geospatial Audit & Micro-Market Map
+
+The application includes an interactive Three.js WebGL cartographic simulation (`src/components/ThreeBuildingMap.jsx`):
+- **Real GPS Projection**: Translates actual Bangalore `latitude` and `longitude` coordinates into 3D Cartesian coordinates with WGS84 datum.
+- **Uncluttered District Layout**: Spatially distinct micro-market platforms with wide street avenues:
+  - **★ Bellandur (Assigned Locality)**: Central platform with Bellandur Lake (`12.9360° N, 77.6650° E`), Outer Ring Road (ORR) highway corridor, and prominent IT hubs.
+  - **HSR Layout**, **Koramangala**, **Whitefield**, **Indiranagar**, and **Electronic City**.
+  - **Arctic Anomaly Outpost**: For listings where `latitude > 50` (swapped coordinates placing them in Arctic Russia), an isolated northwest perimeter with red dashed laser tethers tracing back to their true Bangalore location.
+- **Continuous 60 FPS Orbit Engine**: Gentle, cinematic camera orbit that remains smooth and uninterrupted even when hovering over buildings.
+- **Forensic Filters**: Single-click toggles for `Verified Good Physical Units`, `Corrupt Listings (40 IDs)`, `Fraud Bait Listings (8 IDs)`, and specific anomaly sub-types (`Swapped Lat/Lng`, `Negative Price`, `Floor > Total Floors`, `Carpet > SBUA`, `0-BHK Unit`).
+- **Interactive HUD Inspector**: Click or hover any building in 3D to inspect real-time GPS coordinates, apartment name, price, floor level, and forensic auditor diagnostic verdict.
+
+---
+
 ## Submission File Structure (`submission.json`)
 
 The generated `submission.json` adheres strictly to `submission.template.json` with all 10 verified answers and 22 documented findings:
@@ -269,3 +283,4 @@ The generated `submission.json` adheres strictly to `submission.template.json` w
   "findings": [ ... 22 Discrepancies ... ]
 }
 ```
+
