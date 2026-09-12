@@ -5,7 +5,7 @@
 **College Email:** [akash.20234017@mnnit.ac.in](mailto:akash.20234017@mnnit.ac.in)  
 **Assigned City:** Bangalore  
 **Assigned Locality:** Bellandur  
-**Repository:** [https://github.com/akashprasad/ivy-homes](https://github.com/Akashkrp/ivy-assignment)  
+**Repository:** [https://github.com/akashprasad/ivy-assignment](https://github.com/Akashkrp/ivy-assignment)  
 **Demo URL:** [https://ivy-homes.vercel.app](https://ivy-homes.vercel.app)  
 **Reference Moment:** `2026-09-10T00:00:00+05:30` (IST)  
 
