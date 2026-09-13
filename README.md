@@ -1,345 +1,304 @@
-# Ivy Homes — Software Engineering Internship (September 2026)
-### Full-Stack Real Estate Intelligence Platform & Empirical API Audit
+# Ivy Homes — Software Engineering Internship, September 2026
 
-**Candidate:** Akash Kumar Prasad  
-**College Email:** [akash.20234017@mnnit.ac.in](mailto:akash.20234017@mnnit.ac.in)  
-**Assigned City:** Bangalore  
-**Assigned Locality:** Bellandur  
-**Repository:** [https://github.com/Akashkrp/ivy-assignment](https://github.com/Akashkrp/ivy-assignment)  
-**Demo URL:** [https://ivy-assignment-dun.vercel.app](https://ivy-assignment-dun.vercel.app)  
-**Reference Moment:** `2026-09-10T00:00:00+05:30` (IST)  
+A property frontend built on the Ivy Homes API, and an audit of everywhere
+`API_REFERENCE.md` disagrees with the service it claims to describe.
 
----
+- **Candidate:** Akash Kumar Prasad · MNNIT Allahabad · akash.20234017@mnnit.ac.in
+- **City:** Bangalore · **Assigned locality:** Bellandur
+- **Live demo:** https://ivy-assignment-dun.vercel.app
+- **Answers and findings:** [`submission.json`](./submission.json)
 
-## Table of Contents
-1. [Project Overview](#project-overview)
-2. [Quick Start & Setup Instructions](#quick-start--setup-instructions)
-3. [Answers to the 10 Mandatory Questions](#answers-to-the-10-mandatory-questions)
-4. [Hypothesis Testing & Empirical Findings](#hypothesis-testing--empirical-findings)
-   - [What We Suspected & Proved (The 24 Documentation Lies)](#what-we-suspected--proved-the-24-documentation-lies)
-   - [What We Checked That Turned Out To Be Perfectly Fine](#what-we-checked-that-turned-out-to-be-perfectly-fine)
-5. [Frontend Architecture & Key Features](#frontend-architecture--key-features)
-6. [3D Geospatial Audit & Micro-Market Map](#3d-geospatial-audit--micro-market-map)
-7. [Data Ingestion & Local SQLite Database](#data-ingestion--local-sqlite-database)
-8. [What We Would Do With Another Two Days](#what-we-would-do-with-another-two-days)
-9. [Submission File Structure (`submission.json`)](#submission-file-structure-submissionjson)
-
+Built with React 19, Vite, Tailwind CSS, react-router and three.js. Claude
+(Anthropic) was used throughout — for the frontend, for the probe and analysis
+scripts, and as a sounding board for the hypotheses below. Every number in
+`submission.json` is produced by a committed script from the raw API dump, not
+typed in by hand.
 
 ---
 
-## Project Overview
+## Running it
 
-This project completes the Ivy Homes September 2026 Internship assignment, comprising:
-1. **Automated Ingestion Pipeline:** A Node.js engine that fetches the entire city dataset (`4,700` listings, `1,900` rentals, `520` projects) within rate limits and mirrors it to local SQLite (`data/ivy_homes.db`) and JSON files.
-2. **Rigorous Data Investigation:** Formulated mathematical proofs to solve the 10 city-specific questions in `statement.md` anchored to the exact reference moment.
-3. **Comprehensive Documentation Audit:** Discovered, reproduced, and evidenced **24 specific discrepancies ("lies")** between `API_REFERENCE.md` and actual server behavior.
-4. **Interactive Production Web App:** Built with React, Vite, and Tailwind CSS, featuring active demo session authentication with automatic 15-minute token refresh, resilient client-side filtering compensating for server filter flaws, property detail routes, favourites synchronization, and an interactive "Insights & Truth Explorer".
-
----
-
-## Quick Start & Setup Instructions
-
-### Prerequisites
-- Node.js `v18+` or `v20+` (tested on Node v24.20.0)
-- npm `v9+` or `v11+`
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/Akashkrp/ivy-assignment.git
-cd ivy-assignment
-```
-
-### 2. Install Dependencies
 ```bash
 npm install
+npm run dev          # http://localhost:5173
 ```
-
-### 3. Run Ingestion Script (Optional — Already Mirrored)
-To pull fresh records directly from the Ivy Homes API and verify live endpoint pagination:
-```bash
-node scripts/ingest.mjs
-```
-This stores all records in `data/listings.json`, `data/rentals.json`, `data/projects.json`, and `data/ivy_homes.db`.
-
-### 4. Run Frontend Locally
-```bash
-npm run dev
-```
-Open [http://localhost:5173/](http://localhost:5173/) in your browser.
-
-### 5. Build for Production
-```bash
-npm run build
-```
-
----
-
-## Answers to the 10 Mandatory Questions
-
-All calculations are anchored to `REFERENCE = 2026-09-10T00:00:00+05:30 (IST)` for the city of **Bangalore** and assigned locality **Bellandur**:
-
-| # | Question Key | Evaluated Answer | Evaluation Rule | Methodology & Proof |
-|---|---|---|---|---|
-| **1** | `total_listing_records` | **`4700`** | Exact Count | The API's response metadata falsely reports `total: 4301`. Continuing offset pagination until `has_more: false` yields exactly **4,700 unique retrievable records** across 94 pages. |
-| **2** | `unique_properties` | **`4182`** | ±1% Allowed | Multiple real estate portals list identical physical units. Deduplication across composite keys `(apartment_name, locality, floor, total_floors, bedroom, facing_direction)` reveals that the 4,700 records represent **4,182 distinct physical properties**. |
-| **3** | `active_listings` | **`3722`** | Exact Count | The documentation claimed inactive listings are excluded server-side. In truth, **978** listings have `is_live: false`, leaving exactly **3,722 active listings**. |
-| **4** | `corrupt_listing_ids` | **`40 IDs`** (Sorted list below) | Real vs Invented | Exactly 5 distinct physical impossibility categories exist in the synthetic dataset, each containing **exactly 8 records** (5 × 8 = 40 records): negative prices, floor > total floors, carpet area > super built-up, swapped lat/lon (lat > 50 in Arctic Russia), and 0-BHK apartments. |
-| **5** | `total_monthly_rent` | **`6448700`** (₹64,48,700) | Exact Count | Sum of monthly rent across all 191 retrievable rental units in assigned locality **Bellandur**. |
-| **6** | `avg_price_per_sqft_2bhk` | **`11496.64`** (₹11,496.64 / sqft) | ±1% Allowed | Evaluated across retrievable listings where `is_live === true` and `bedroom === 2`, excluding corrupt (40) and fake (8) records. Compensates for the `magichomes` unit lie where carpet area is reported in square meters (< 300) by converting m² to sqft (× 10.7639). |
-| **7** | `costliest_project` | **`{"project_id": "P10255", "price_max_inr": 48900000}`** | ±1% Allowed | Project units lie: values < 10 are in Crores, values >= 10 are in Lakhs. Project `P10255` (*Puravankara Vista*) has `price_max = 4.89 Cr` (₹4,89,00,000 INR), which is higher in real INR than `P10068` (`price_max = 99.8 L` = ₹9,980,000 INR). |
-| **8** | `listings_last_7_days` | **`149`** | Exact Count | Number of listings posted in `[2026-09-03T00:00:00, 2026-09-10T00:00:00) IST`. The database dates are already recorded in local IST. |
-| **9** | `fake_listing_ids` | **`8 IDs`** (Sorted list below) | Real vs Invented | Exactly 8 clickbait sale listings exist with artificially minuscule prices (₹6,250 to ₹16,790 for full 2BHK/3BHK apartments) posted solely to generate leads. |
-| **10** | `projects_with_wrong_listing_count` | **`127`** | Exact Count | `total_listings` was documented to always agree with available listings. For **127** out of 520 projects, this number contradicts the actual count of active listings in the database. |
-
-### Corrupt Listing IDs (40 IDs)
-```json
-[
-  "100-1000035", "100-1000753", "100-1001077", "100-1001141", "100-1002346", 
-  "100-1002442", "100-1002512", "100-1002600", "100-1002884", "100-1003117", 
-  "100-1003624", "DWE-1000614", "DWE-1001165", "DWE-1001183", "DWE-1001909", 
-  "DWE-1002892", "DWE-1003673", "MAG-1000179", "MAG-1000885", "MAG-1002362", 
-  "MAG-1003269", "MAG-1003510", "SQU-1000394", "SQU-1000979", "SQU-1002298", 
-  "SQU-1002843", "SQU-1003177", "SQU-1003370", "ZER-1000260", "ZER-1000430", 
-  "ZER-1000500", "ZER-1001207", "ZER-1001249", "ZER-1001334", "ZER-1002586", 
-  "ZER-1002632", "ZER-1002667", "ZER-1002911", "ZER-1003426", "ZER-1003603"
-]
-```
-
-### Fake Listing IDs (8 IDs)
-```json
-[
-  "100-1002501", "DWE-1002631", "DWE-1003102", "MAG-1003492", 
-  "SQU-1001431", "SQU-1003524", "ZER-1003652", "ZER-1003813"
-]
-```
-
----
-
-## Hypothesis Testing & Empirical Findings
-
-### What We Suspected & Proved (The 24 Documentation Lies)
-
-1. **API Key Authentication (`auth`):**
-   - *Documented:* Append API key as query parameter `?api_key=...`.
-   - *Actual:* Returns 401. Key must strictly be passed in the `X-API-Key` HTTP header.
-2. **Bearer Token on Collections (`auth`):**
-   - *Documented:* Collection endpoints only require the API key.
-   - *Actual:* Returns 401 without an active `Authorization: Bearer <token>` session.
-3. **Session Expiration (`auth`):**
-   - *Documented:* Tokens last 24 hours (`expires_in: 86400`); no refresh flow exists.
-   - *Actual:* Tokens expire in 15 minutes (`expires_in: 900`). The response returns `access_token` and `refresh_url: "/auth/refresh"`.
-4. **Token Refresh Endpoint (`undocumented_endpoint`):**
-   - *Documented:* "There is no refresh flow."
-   - *Actual:* `POST /auth/refresh` exists and refreshes access tokens without requiring re-entering credentials.
-5. **Pagination Mechanism (`pagination`):**
-   - *Documented:* Endpoints take `page` (1-indexed) and `limit`, returning `{ total, page, page_size, results }`.
-   - *Actual:* Server completely ignores `page` and uses `offset`. Response contains `{ limit, offset, count, total, has_more, results }`.
-6. **Limit Ceiling (`pagination`):**
-   - *Documented:* Maximum limit is 200.
-   - *Actual:* Hard-capped at 50. Requesting 100 or 200 returns only 50 records.
-7. **Total Underreporting (`completeness`):**
-   - *Documented:* `total` is the exact number of matching records.
-   - *Actual:* Listings reports `total: 4301` but has `4700` records; rentals reports `1739` but has `1900`; projects reports `476` but has `520`.
-8. **Inactive Listings (`completeness`):**
-   - *Documented:* Inactive listings are excluded server-side.
-   - *Actual:* 978 listings have `is_live: false` and are returned unless filtered by the client.
-9. **Min/Max Price Filter Flaw (`filters`):**
-   - *Documented:* `min_price` and `max_price` query parameters filter results.
-   - *Actual:* Accepted by server but silently ignored; client-side filtering is mandatory.
-10. **Project ID Filter Flaw (`filters`):**
-    - *Documented:* `GET /v1/listings?project_id=...` filters listings to that project.
-    - *Actual:* Query parameter is ignored; returns unfiltered listings.
-11. **Singular Listing Endpoint (`missing_endpoint`):**
-    - *Documented:* `GET /v1/listing/{listing_id}`.
-    - *Actual:* 404 Not Found. Real endpoint is plural: `GET /v1/listings/{id}`.
-12. **Similar Listings Endpoint (`missing_endpoint`):**
-    - *Documented:* `GET /v1/listings/{id}/similar`.
-    - *Actual:* 404 Not Found. Must be computed on the client.
-13. **Favourites Path (`missing_endpoint`):**
-    - *Documented:* `GET /v1/favourites`, `POST /v1/favourites`.
-    - *Actual:* 404 Not Found. The active endpoint is `/v1/saved`.
-14. **Saved Payload Schema (`undocumented_endpoint`):**
-    - *Documented:* Send `{ id: "..." }`.
-    - *Actual:* Requires `{ listing_id: "..." }`. Sending `id` returns 422 Unprocessable Entity.
-15. **Analytics Summary Endpoint (`missing_endpoint`):**
-    - *Documented:* `GET /v1/analytics/summary`.
-    - *Actual:* 404 Not Found.
-16. **Project Units Lie (`units`):**
-    - *Documented:* `price_min` and `price_max` are integer Rupees.
-    - *Actual:* Values < 10 are in Crores; values >= 10 are in Lakhs.
-17. **Carpet Area Units Lie (`units`):**
-    - *Documented:* Area is square feet integer everywhere.
-    - *Actual:* 389 listings on `magichomes` report area in square meters (< 300).
-18. **Timestamp Offset Missing (`timestamps`):**
-    - *Documented:* All timestamps have UTC `Z` suffix.
-    - *Actual:* Listings timestamps omit `Z` and timezone offsets, stored in local IST.
-19. **Project Inventory Discrepancies (`consistency`):**
-    - *Documented:* `total_listings` always agrees with current inventory.
-    - *Actual:* 127 projects report wrong counts compared to actual database listings.
-20. **Impossible Data Injected (`data_quality`):**
-    - *Documented:* All records describe real properties.
-    - *Actual:* 40 records have physically impossible values (negative price, floor > total floors, etc.).
-21. **Fraudulent Enquiry Bait (`fraud`):**
-    - *Documented:* Genuine sale listings.
-    - *Actual:* 8 listings have clickbait prices under ₹50,000.
-22. **Duplicate Properties (`duplicates`):**
-    - *Documented:* Each listing corresponds to exactly one physical property.
-    - *Actual:* 4,700 listings describe only 4,182 distinct physical properties due to portal duplicates.
-23. **Furnishing Filter on Listings Ignored (`filters`):**
-    - *Documented:* Listings support `furnishing` query parameter to filter by unfurnished, semi-furnished, fully-furnished.
-    - *Actual:* The parameter is accepted but silently ignored on `/v1/listings` — returns `total=4301` with all furnishing types regardless. The same filter works correctly on `/v1/rentals`.
-24. **Logout Does Not Invalidate Tokens (`auth`):**
-    - *Documented:* `POST /auth/logout` invalidates the current token server side.
-    - *Actual:* Returns `{"ok": true, "note": "tokens are stateless; discard them client side"}`. Tokens remain valid after logout until natural 15-minute expiry.
-
----
-
-### What We Checked That Turned Out To Be Perfectly Fine
-
-Testing hypotheses that did **not** pan out is essential to demonstrate rigorous investigative thinking:
-
-1. **Hypothesis: Rental Prices Might Be in Thousands or Negative**
-   - *Suspicion:* Since listing sale prices had negative values and projects had mixed Lakhs/Crores units, we hypothesized rentals might also have negative prices or units in thousands.
-   - *Investigation:* Analyzed all 1,900 rental records and specifically the 191 in Bellandur.
-   - *Finding:* **Completely Fine.** Min price is ₹12,000 and max is ₹98,000. Exactly 0 negative or zero prices exist in rentals. Rent and deposit values follow standard Indian rental market scales.
-
-2. **Hypothesis: 0 Bedrooms and 0 Floors on Plots Were Corrupted Records**
-   - *Suspicion:* We found 182 records with `total_floors: 0` and `bedroom: 0` and suspected they were corrupt data.
-   - *Investigation:* Grouped these records by `property_type`.
-   - *Finding:* **Completely Fine.** Exactly 100% of these records were of type `plot`. Vacant plots of land in Indian real estate have no bedrooms and no building floors. Only the 8 non-plot records with 0 BHK were corrupt.
-
-3. **Hypothesis: Rate Limiting Might Throttle Fast Ingestion**
-   - *Suspicion:* With 140+ requests required to paginate the dataset, we suspected the server might aggressively enforce burst limits or drop connections.
-   - *Investigation:* Benchmarked sequential ingestion requests against the stated 1200 req/min limit.
-   - *Finding:* **Completely Fine.** The server handled all 140 requests smoothly within 45 seconds with 0 rate limit errors (`429`), demonstrating honest capacity.
-
-4. **Hypothesis: Project Dates or Total Units Might Be Bogus**
-   - *Suspicion:* We checked if launch dates, possession dates, or unit counts were corrupted (e.g. negative units or dates in the year 3000).
-   - *Investigation:* Checked min/max ranges for `launch_date`, `possession_date`, and `total_units`.
-   - *Finding:* **Completely Fine.** Launch dates span 2022 to 2025, possession dates span 2026 to 2030, and total units range from 100 to 1,200 units, aligning with authentic construction timelines.
-
-5. **Hypothesis: Portal Websites Might Include Unknown Names or Malformed URLs**
-   - *Suspicion:* We suspected some listings might come from undocumented portals or have broken URLs.
-   - *Investigation:* Ran distinct set queries on `website` and verified URL prefixes.
-   - *Finding:* **Completely Fine.** All 4,700 listings belong strictly to the 5 known portals (`100acres`, `dwelling`, `magichomes`, `squarelane`, `zerobroker`) in roughly equal distribution (~940 listings each).
-
-6. **Hypothesis: Bathrooms or Balconies Might Have Negative Values**
-   - *Suspicion:* We tested whether bathroom or balcony counts had negative numbers similar to negative floor or price anomalies.
-   - *Investigation:* Checked `bathroom < 0` and `balcony < 0` across all listings.
-   - *Finding:* **Completely Fine.** All bathroom and balcony numbers were non-negative (0 to 5).
-
----
-
-## Frontend Architecture & Key Features
-
-- **Authentication:** Demo switcher (`demo1`, `demo2`, `demo3` with credentials managed securely via `.env` / environment variables). Automatically refreshes access tokens in the background every 15 minutes to guarantee session survival well beyond 30 minutes.
-- **Client-Side Filter Engine:** Directly addresses the server's documentation discrepancies by filtering locality, BHK, price range, and furnishing in state, ensuring instant response times.
-- **Property Detail Pages (`/listings/:id`):** URL-routable pages featuring full architectural specifications, seller contact details, anomaly detection alerts, and client-computed comparable recommendations.
-- **Dedicated Rentals & Projects Views:** Reflects true normalized INR prices and includes a dedicated Bellandur rental summary banner (Q5) and Costliest Project spotlight (Q7).
-- **Favourites Hub (`/favourites`):** Synced with the active user session and backed by localStorage for persistence across reloads.
-- **Insights & Truth Explorer (`/insights`):** Visual presentation of all 10 verified data answers and an interactive discrepancy explorer with direct evidence links.
-
----
-
-## Data Ingestion & Local SQLite Database
-
-The dataset is ingested by `scripts/ingest.mjs` into both structured JSON and a normalized SQLite database at `data/ivy_homes.db`:
-- Table `listings`: 4,700 rows
-- Table `rentals`: 1,900 rows
-- Table `projects`: 520 rows
-
----
-
-## 3D Geospatial Audit & Micro-Market Map
-
-The application includes an interactive Three.js WebGL cartographic simulation (`src/components/ThreeBuildingMap.jsx`):
-- **Real GPS Projection**: Translates actual Bangalore `latitude` and `longitude` coordinates into 3D Cartesian coordinates with WGS84 datum.
-- **Uncluttered District Layout**: Spatially distinct micro-market platforms with wide street avenues:
-  - **★ Bellandur (Assigned Locality)**: Central platform with Bellandur Lake (`12.9360° N, 77.6650° E`), Outer Ring Road (ORR) highway corridor, and prominent IT hubs.
-  - **HSR Layout**, **Koramangala**, **Whitefield**, **Indiranagar**, and **Electronic City**.
-  - **Arctic Anomaly Outpost**: For listings where `latitude > 50` (swapped coordinates placing them in Arctic Russia), an isolated northwest perimeter with red dashed laser tethers tracing back to their true Bangalore location.
-- **Continuous 60 FPS Orbit Engine**: Gentle, cinematic camera orbit that remains smooth and uninterrupted even when hovering over buildings.
-- **Forensic Filters**: Single-click toggles for `Verified Good Physical Units`, `Corrupt Listings (40 IDs)`, `Fraud Bait Listings (8 IDs)`, and specific anomaly sub-types (`Swapped Lat/Lng`, `Negative Price`, `Floor > Total Floors`, `Carpet > SBUA`, `0-BHK Unit`).
-- **Interactive HUD Inspector**: Click or hover any building in 3D to inspect real-time GPS coordinates, apartment name, price, floor level, and forensic auditor diagnostic verdict.
-
----
-
-## What We Would Do With Another Two Days
-
-If granted another 48 hours to expand the platform and forensic audit engine, we would focus on high-impact engineering priorities across data integrity, machine learning, and consumer liquidity:
-
-### 1. Automated Cross-Portal Reconciliation & Conflict Consensus Engine
-- **The Problem**: In our deduplication analysis (Question 2), we uncovered **518 duplicate clusters (1,036 records)** where competing portals (100acres, dwelling, magichomes, squarelane, zerobroker) posted the identical physical apartment with slight attribute drifts (e.g., price differences of ₹5–15 Lakhs or unit conversion mismatches).
-- **The 48-Hour Solution**: Build an automated **Consensus Resolution Worker** that calculates a "Portal Trust Score" based on historical data cleanliness (e.g., frequency of corrupt listings). It would run weighted median voting across duplicate listings to publish a single "True Market Price" with transparent provenance tags showing which portal submitted which variation.
-
-### 2. Machine Learning Anomaly Detection (Isolation Forest & Spatial Autoencoders)
-- **The Problem**: Current forensic filtering relies on hard deterministic heuristics (negative price, floor > total floors, swapped coordinates, carpet > SBUA). However, sophisticated broker fraud (e.g., artificial appreciation, synthetic comps, or bait pricing slightly above our ₹50,000 threshold) escapes rule-based filters.
-- **The 48-Hour Solution**: Train an unsupervised **Isolation Forest + Spatial Autoencoder** model using Python / ONNX runtime directly in the Node.js pipeline:
-  - Feature vectors: `(price_per_sqft, floor_ratio, locality_median_distance, broker_post_velocity, time_to_delist)`.
-  - Output: A continuous **"Integrity Risk Score (0–100)"** displayed as a badge on every listing card and 3D building spire.
-
-### 3. Solar Trajectory & Shadow Simulation on the 3D Building Map
-- **The Problem**: Indian homebuyers in Bangalore / Bellandur prioritize natural light, Vaastu, and ventilation, but static photos cannot communicate seasonal sunlight angles.
-- **The 48-Hour Solution**: Expand the Three.js WebGL engine (`ThreeBuildingMap.jsx`) with a real-time **Bangalore Solar Ephemeris Simulator** (`12.9716° N, 77.5946° E`):
-  - Add a daytime scrub slider (06:00 AM to 06:30 PM) calculating exact sun position, casting accurate building shadows across the Outer Ring Road and balcony facing directions (`facing_direction: North/East/South/West`).
-  - Enable buyers to click their apartment floor level and inspect direct sunlight hours across Summer and Winter solstices.
-
-### 4. Algorithmic Automated Valuation Model (AVM) for Instant Cash Offers
-- **The Problem**: Homeowners seeking liquidity need instant, reliable cash valuation without broker bias or manual property inspections.
-- **The 48-Hour Solution**: Implement an algorithmic **Instant Liquidity Engine** connecting audited Bellandur transaction rates (`₹9,840/sqft` median, project appreciation trends) directly into a homeowner valuation portal:
-  - Generates 3 tiered cash-offer options: *Instant Liquidity (14 Days, 92% market rate)*, *Guaranteed Sale (60 Days, 97% market rate)*, and *Managed Marketplace Listing*.
-  - Displays holding cost savings analysis (maintenance, EMI interest, broker fees).
-
-### 5. Multi-City Expansion & Live WebSocket Stream
-- **The Problem**: The backend database currently mirrors Bangalore, but the architecture should seamlessly scale nationally.
-- **The 48-Hour Solution**: Parameterize the database schema to support **Mumbai (Powai, Bandra)**, **Delhi NCR (Gurugram, Noida)**, and **Hyderabad**:
-  - Connect a WebSocket pub/sub stream so that newly detected corrupt or bait listings are pushed in real time to the admin audit console without requiring page refreshes.
-
----
-
-## Environment Configuration & Security
-
-All sensitive credentials and API keys are strictly decoupled from source control using `.env` (ignored via `.gitignore`). A template is provided in `.env.example`:
 
 ```bash
-# Copy template to configure local environment
-cp .env.example .env
+npm run build        # production bundle into dist/
 ```
 
-| Variable | Description |
-|---|---|
-| `VITE_IVY_API_KEY` | Ivy Homes Candidate API Key |
-| `VITE_DEMO_PASSWORD` | Test user demo account password |
-| `VITE_ASSIGNED_LOCALITY` | Evaluated locality (`bellandur`) |
-| `VITE_CITY` | Primary target market (`Bangalore`) |
+Two optional scripts reproduce the data and the answers from scratch:
+
+```bash
+node scripts/ingest.mjs               # pulls the full dataset into data/ (94+38+11 requests)
+node scripts/generate_submission.mjs  # derives all ten answers -> submission.json
+```
+
+`scripts/generate_submission.mjs` is the single source of truth. The insights
+screen reads the same `submission.json` and `derived.json` it writes, so what
+the app shows and what the submission claims cannot drift apart.
+
+Credentials live in `.env` (see `.env.example`): `VITE_IVY_API_KEY`,
+`VITE_DEMO_PASSWORD`, `VITE_ASSIGNED_LOCALITY`, `VITE_CITY`. Sign in with any of
+`demo1@ivy.homes`, `demo2@ivy.homes`, `demo3@ivy.homes`.
+
+### How data reaches the browser
+
+Login, the saved-listings CRUD and session refresh all hit the live API from the
+browser. Bulk browsing reads a snapshot in `public/data/` that
+`scripts/ingest.mjs` pulled from that same API, for the reason the brief itself
+suggests: the whole dataset is only a few thousand records, most documented
+filters do not work server side, and Q2's deduplication and Q9's fraud detection
+both need every record in memory at once. Paging the API on every keystroke
+would be slower and no more truthful.
 
 ---
 
-## Submission File Structure (`submission.json`)
+## The ten answers
 
-The generated `submission.json` adheres strictly to `submission.template.json` with all 10 verified answers and 24 documented findings:
-```json
-{
-  "api_key": "IVY26-AD650B77XXXX",
-  "candidate": {
-    "name": "Akash Kumar Prasad",
-    "email": "akash.20234017@mnnit.ac.in",
-    "repo_url": "https://github.com/Akashkrp/ivy-assignment",
-    "demo_url": "https://ivy-assignment-dun.vercel.app"
-  },
-  "answers": {
-    "total_listing_records": 4700,
-    "unique_properties": 4182,
-    "active_listings": 3722,
-    "corrupt_listing_ids": [ ... 40 IDs ... ],
-    "total_monthly_rent": 6448700,
-    "avg_price_per_sqft_2bhk": 11496.64,
-    "costliest_project": { "project_id": "P10255", "price_max_inr": 48900000 },
-    "listings_last_7_days": 149,
-    "fake_listing_ids": [ ... 8 IDs ... ],
-    "projects_with_wrong_listing_count": 127
-  },
-  "findings": [ ... 24 Discrepancies ... ]
-}
-```
+Anchored to `REFERENCE = 2026-09-10T00:00:00+05:30`, confirmed by `GET /health`.
+The assigned locality is confirmed by the undocumented `GET /v1/me`.
 
+| # | Key | Answer | How |
+|---|---|---|---|
+| 1 | `total_listing_records` | **4700** | Page by `offset` until `has_more` is false — 94 requests ending at offset 4650. The envelope says `total: 4301`. All 4,700 ids are distinct, and `/v1/localities` independently sums to 4,700. |
+| 2 | `unique_properties` | **4182** | 490 clusters of the same flat posted twice, 518 redundant records. Society names are respelled between copies, so the name is normalised before grouping on society + locality + floor + building height + bedrooms + facing. |
+| 3 | `active_listings` | **3722** | `is_live` is undocumented and 978 records have it false. |
+| 4 | `corrupt_listing_ids` | **56 ids** | Seven impossibility classes, exactly eight records each, disjoint. |
+| 5 | `total_monthly_rent` | **6448700** | Sum over the 191 rentals whose `locality` is `bellandur`. The `title` field names a different locality in 1,691 of 1,900 records; filtering on it instead gives a plausible-looking and wrong ₹65,35,100. |
+| 6 | `avg_price_per_sqft_2bhk` | **11743.41** | Mean of price ÷ carpet area over the 1,150 live 2 BHK records left after removing answers 4 and 9, with square-metre areas converted first. |
+| 7 | `costliest_project` | **P10255 · 48900000** | Project prices are crores below 10 and lakhs at 10 and above. |
+| 8 | `listings_last_7_days` | **149** | `[2026-09-03, 2026-09-10)` IST. Listing timestamps are naive **IST**, not the UTC the conventions table promises. |
+| 9 | `fake_listing_ids` | **170 ids** | Seven phone numbers running enquiry-bait rings. |
+| 10 | `projects_with_wrong_listing_count` | **127** | `total_listings` against the live listing count per project. |
+
+---
+
+## Working out what to distrust
+
+The first sweep is the cheap one and it does pay: call every documented path,
+see what 404s, read one response, and diff it against the reference. That found
+the header-not-query-parameter key, the missing bearer token, `page` being
+ignored in favour of `offset`, the 50-record cap, `/v1/listing/{id}` versus
+`/v1/listings/{id}`, `/v1/favourites` versus `/v1/saved`, the absent
+`/v1/analytics/summary` and `/v1/listings/{id}/similar`, and the 15-minute token
+with the refresh flow the documentation says does not exist. An hour, and none
+of it required a hypothesis.
+
+Everything that mattered after that needed one.
+
+**`total` is a lie, and it is the expensive one.** The documentation tells you to
+read `total`, divide by your limit, and request that many pages. Doing exactly
+that stops at 4,301 of 4,700 listings. What gave it away was not the listings
+endpoint but `has_more`, which stays `true` past the reported total; probing
+offsets past the real end returns `count: 0`, so the end is unambiguous. `total`
+turns out to be understated by a uniform ~8.5% on every collection and every
+filtered query — 4301/4700, 1739/1900, 476/520, and `locality=bellandur`
+reporting 406 against 444. The undocumented `/v1/localities` reports the true
+counts, which is the cleanest possible proof that the other endpoint is wrong.
+Every answer below would have been wrong if this one had been missed.
+
+**Areas that are not areas.** Plotting carpet area per portal shows magichomes
+with a second mode near 100 that no other portal has. 389 of its 940 records are
+in square metres. The two populations do not overlap at all — nothing from
+another portal is below 321 sqft, no square-metre record is above 264 — and the
+converted rows then match the rest of the same portal on both price per square
+foot (11,541 against 11,234) and carpet-to-super-built-up ratio (0.751 against
+0.749), which is what turns a guess into a conclusion.
+
+**Project prices that are not rupees.** `price_min` and `price_max` run from 1 to
+99.8, which is obviously not rupees. The thing that makes it interesting is that
+372 of 520 projects have a raw `price_min` **larger** than their raw
+`price_max` — impossible under any single unit. Reading the magnitude as the
+unit (below 10 crores, 10 and above lakhs) is the only rule that leaves all 520
+with min ≤ max, and it is the one that brackets the real listing prices inside
+each project. It also changes the answer to question 7: under the magnitude rule
+P10255 wins at 4.89 crore, but read as lakhs throughout, P10068 would win at
+₹99.8 lakh.
+
+**Timestamps that lie about their timezone.** The conventions table says UTC
+with a `Z` suffix everywhere. Listing timestamps carry no suffix and no offset,
+and rentals carry `Z`, so at most one of them can be right. Two things settle
+it. The latest non-future listing is `2026-09-09T23:40:00` and the latest rental
+is `2026-09-09T18:11:00Z`, which is 23:41 IST — both collections stop a few
+minutes short of the same instant, which only lines up if the naive stamps are
+already IST. And the server itself groups `sort_by=posted_at` on the IST
+calendar date, converting the rentals' `Z` values to do it. Reading them as UTC
+changes question 8 from 149 to 142.
+
+**The rental title.** Every rental has a `title` like "2 BHK for rent in
+Koramangala" alongside a `locality`. They disagree in 1,691 of 1,900 records,
+and the locality the title names is always a real locality, so nothing looks
+wrong record by record. The `description` agrees with `locality` in all 1,900,
+and the bedroom count in the title is right every time — only the title's
+locality is shuffled. This is a direct trap for question 5: filter Bellandur
+rentals by title and you get 184 units and ₹65,35,100 instead of 191 and
+₹64,48,700. The app now shows the locality field and flags the title as wrong
+rather than displaying both and letting them contradict each other.
+
+### The two that the obvious rule gets wrong
+
+The brief says the first rule that fits will fit most of the data, and that the
+answer is in what it gets wrong. That happened twice, in opposite directions.
+
+**Eight cheap listings that are not fraud.** Sorting by price surfaces eight
+records between ₹6,250 and ₹16,790 for whole 2 and 3 BHK flats. That reads as
+textbook enquiry bait and it is what I first recorded them as. It is wrong.
+Every other price in the dataset is a multiple of 10,000 and these eight are the
+only exceptions; multiplied by 1,000 each one lands between 0.69× and 1.25× of
+the median rate for its own locality and bedroom count. They are a units error —
+price recorded in thousands — sitting alongside the magichomes area error, not a
+fraud pattern. Bait pricing does not produce a clean factor of exactly 1,000
+across eight independent records on five different portals. They belong in
+answer 4, not answer 9.
+
+**Twelve shared phone numbers, of which only seven are rings.** With the price
+route exhausted, the seller side is the other way in. Exactly 12 phone numbers
+post under more than one `posted_by_name`; the other 782 map one-to-one, so 12
+is a real signal and not noise. Stopping there gives 306 listings and would be
+wrong. Five of those twelve price at a median 0.97× of market with 54% verified
+and 76% live — indistinguishable from the population, and evidently just busy
+agencies sharing an office line. The other seven price at a median 0.46–0.53× of
+market and have **every single listing** flagged `is_verified` and `is_live`.
+Against base rates of 60% and 79%, one agent going 24-for-24 on both is roughly
+a one-in-fifty-million coincidence; seven of them is not a coincidence at all.
+170 listings, and `is_verified` does not mean what the documentation says it
+means.
+
+The impossibility classes fell out of the same discipline: every physical
+constraint I could state, run over all 4,700 records. Negative prices, carpet
+area above super built-up, floor above the building's height, latitude and
+longitude transposed, apartments with zero bedrooms and zero bathrooms, and
+`posted_at` up to ten months past the reference. Each class contains exactly
+eight records spread evenly over all five portals — which is what marks them as
+injected per-record defects rather than a portal convention, and which is the
+argument for counting the price-in-thousands rows as a seventh class of the same
+kind while leaving the 389 magichomes areas out of answer 4 entirely.
+
+---
+
+## What I checked that turned out to be fine
+
+The hypotheses that went nowhere, with what actually came back.
+
+**Rental prices might carry the same unit damage as sale prices.** They do not.
+All 1,900 are between ₹7,500 and ₹91,000 with none at or below zero, the
+deposit-to-rent ratio sits in a clean 2–10× band, and the median rent is ₹41/sqft.
+The five rentals under 300 sqft are all genuine 1 BHK studios with matching
+super-built-up areas, not square-metre rows — the ratio holds at 0.743, same as
+the rest of the collection.
+
+**The 182 records with zero bedrooms, bathrooms and floors might be corrupt.**
+They are all plots, and all 182 of them are zero on every one of those fields.
+A plot has no bedrooms. Only the 8 non-plot records with zeroes are defects, and
+treating the plots as corrupt would have put 182 invented ids into answer 4.
+
+**Seller-written descriptions might contradict the structured fields.** The brief
+warns that a seller can write anything, so I checked bedroom count, property
+type, furnishing, society name, locality and facing direction from the
+description text against the fields, on all 4,700 listings. Zero contradictions.
+For listings the prose is entirely trustworthy — it is the rentals' `title`,
+which is generated rather than seller-written, that is wrong.
+
+**Rate limiting might make full ingestion awkward.** It does not. The full pull
+is 143 requests against a 1,200/minute limit and returns zero `429`s. The API is
+exactly as honest about capacity as the brief says.
+
+**Sorting and the rest of the filters might be broken too.** Mostly they are
+fine, and saying so matters as much as reporting what is not. `sort_by` works
+correctly for `price`, `carpet_area` and `bedroom` in both directions;
+`locality`, `bhk`, `property_type` and `project_status` all filter correctly;
+`furnishing` filters correctly on `/v1/rentals`. Bad input is handled properly —
+`sort_by=nonsense` returns 400 naming the sortable fields, `order=sideways` and
+`limit=0` return 422. Only `posted_at` sorting is wrong, and only in that it
+discards the time of day.
+
+**Identifiers might overlap or dangle.** Every `listing_id` and every
+`listing_url` is unique, the id prefix matches the portal on all 4,700 records,
+and every non-null `project_id` resolves to a real project. The documentation's
+claim that ids are globally unique is true; it is only the "one physical
+property" half of that sentence that fails.
+
+**Projects might be internally inconsistent.** No project has `min_area_sqft`
+above `max_area_sqft`, fewer units than towers, or a possession date before its
+launch date. All 520 carry a distinct RERA number. `project_status` and
+`possession_date` are uncorrelated — 52% of "ready to move" projects have a
+future possession date — but the documentation never claims a relationship
+between them, so it is noise in the generator rather than a discrepancy worth
+reporting. Reporting it would have cost precision.
+
+**Coordinates might be noisy generally.** Excluding the eight transposed pairs,
+every listing sits between 12.81–13.13°N and 77.43–77.75°E. That is Bangalore.
+
+**Logout might work.** It returns 200 and the token still authenticates
+afterwards — so this one did not turn out fine, but the API is honest about it:
+the response body says `tokens are stateless; discard them client side`.
+
+---
+
+## The app
+
+Six things the brief asks for, and where each one lives.
+
+| Requirement | Where | Notes |
+|---|---|---|
+| Login | `LoginModal`, `services/api.js` | Real `POST /auth/login`. Session survives refresh via `localStorage`, and a one-minute timer refreshes the 15-minute access token through `POST /auth/refresh`, so it is still working half an hour later. |
+| Browse listings | `/` — `ListingsView` | Paginated, 24 per page. Locality, bedrooms, price range and furnishing all filter, client-side, because the server ignores `min_price`, `max_price` and `furnishing`. |
+| Listing detail | `/listings/:id` — `ListingDetailView` | Reachable by URL. Shows the raw square-metre value next to the converted one, explains any defect on the record, and computes comparables using the rule the missing `/similar` endpoint documents. |
+| Saved listings | `/favourites` — `FavouritesView` | `GET`/`POST`/`DELETE /v1/saved`. Per user — the offline mirror is keyed by email, so signing in as `demo2` never shows `demo1`'s list. Survives reload and re-login. |
+| Rentals and projects | `/rentals`, `/projects` | Rent, deposit and maintenance as served; project prices normalised out of crores/lakhs into rupees with the raw value shown beside them; every project card compares `total_listings` against the real count. |
+| Insights | `/insights` | All ten answers with their reasoning, the defect inspector, the bait rings with their evidence, the 29 findings, and a Bellandur breakdown. |
+
+Every figure on the insights screen is computed from the dataset or read from
+`submission.json` at render time. There are no hard-coded statistics anywhere in
+the app — if the data changes, the screens change with it.
+
+A three.js locality map plots the dataset geographically, including the eight
+transposed coordinates that land outside Bangalore. It is decoration; the six
+requirements above do not depend on it.
+
+---
+
+## What I would do with another two days
+
+**Reconcile the duplicate clusters instead of just counting them.** 490 clusters
+describe one flat twice, and the two copies disagree — on price by up to 34%, on
+area by a few square feet, on `posted_by`. There is a real product in picking
+the truthful copy: prefer the portal whose price sits closest to the cluster's
+own comparables, surface the spread as a negotiating signal, and show the buyer
+one property with three prices rather than three properties.
+
+**Put a confidence score on the fraud call.** Right now a listing is bait or it
+is not, on a rule with a hard 0.75 threshold. The honest version is a score over
+the signals I actually measured — rate versus local comparables, the
+verified/live pattern for the number, alias count, locality spread — so the five
+agencies that share a line come out medium rather than being silently cleared,
+and a reviewer can move the line themselves.
+
+**Ingest incrementally and diff.** The snapshot is a single moment. Pulling
+nightly and storing diffs would answer the questions the static dump cannot:
+which listings are relisted at a lower price, which bait numbers rotate their
+aliases, whether `total` drifts, whether the impossible records ever get fixed.
+
+**Make the audit a test suite.** Every finding in `submission.json` is currently
+prose plus evidence ids. Each one is also a executable assertion against the live
+API — `page` is ignored, `limit` caps at 50, `total` understates by 8.5%. Run
+them in CI and the document stops being able to go stale, which is the failure
+mode that produced `API_REFERENCE.md` in the first place.
+
+---
+
+## Findings
+
+29 discrepancies in `submission.json`, every one reproduced against the live API
+before being written down. Grouped by the categories the brief defines:
+
+`auth` 4 · `pagination` 3 · `filters` 3 · `sorting` 1 · `units` 3 ·
+`timestamps` 1 · `duplicates` 1 · `completeness` 1 · `data_quality` 3 ·
+`fraud` 1 · `consistency` 1 · `missing_endpoint` 4 · `undocumented_endpoint` 3
+
+Things I considered and left out because I could not reproduce them as a
+documentation discrepancy: the `project_status` / `possession_date`
+non-correlation described above, and `locality` matching case-insensitively when
+the reference says lowercase. Precision counts as much as recall, and a finding
+I cannot defend is worse than one I did not make.
