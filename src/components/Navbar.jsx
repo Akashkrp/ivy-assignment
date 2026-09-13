@@ -62,7 +62,7 @@ export default function Navbar({ user: propUser, onLogout, onOpenLogin, savedCou
 
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-white/95 border-b border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.03)] transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
         <div className="flex items-center justify-between h-16">
           
           {/* Logo & City Badge */}

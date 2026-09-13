@@ -47,7 +47,7 @@ export default function FavouritesView({ user: propUser, onOpenLogin, savedListi
       
       {/* Header */}
       <section className="bg-slate-50 border-b border-slate-200/80 pt-10 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -78,10 +78,10 @@ export default function FavouritesView({ user: propUser, onOpenLogin, savedListi
       </section>
 
       {/* Main Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 mt-8">
         
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-72 bg-slate-100 rounded-2xl animate-pulse border border-slate-200"></div>
             ))}
@@ -104,7 +104,7 @@ export default function FavouritesView({ user: propUser, onOpenLogin, savedListi
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
             {savedObjects.map((listing) => (
               <ListingCard
                 key={listing.listing_id}

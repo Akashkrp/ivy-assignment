@@ -212,7 +212,7 @@ export default function InsightsView({ user, onOpenLogin }) {
       
       {/* Header Banner */}
       <section className="bg-slate-50 border-b border-slate-200/80 pt-8 pb-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
           
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div>
@@ -335,7 +335,7 @@ export default function InsightsView({ user, onOpenLogin }) {
       </section>
 
       {/* Main Content Area */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 mt-8">
         
         {/* TAB: 3D Locality & Building Map Simulation */}
         {activeTab === '3dmap' && (

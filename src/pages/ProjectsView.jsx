@@ -110,7 +110,7 @@ export default function ProjectsView({ user, onOpenLogin }) {
       
       {/* Header Banner with Costliest Project Highlight */}
       <section className="bg-slate-50 border-b border-slate-200/80 pt-10 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10">
           
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div>
@@ -190,7 +190,7 @@ export default function ProjectsView({ user, onOpenLogin }) {
       </section>
 
       {/* Main Grid & Filters */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 mt-8">
         
         {/* Filters */}
         <div className="bg-white border border-slate-200 rounded-3xl p-5 mb-8 shadow-xs">
@@ -258,7 +258,7 @@ export default function ProjectsView({ user, onOpenLogin }) {
         ) : (
           <motion.div 
             layout
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
           >
             <AnimatePresence mode="popLayout">
               {pagedProjects.map((p) => {

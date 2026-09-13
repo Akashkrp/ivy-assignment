@@ -159,7 +159,7 @@ export default function App() {
 
         {/* Global Footer */}
         <footer className="border-t border-slate-200/80 bg-slate-50 py-10 mt-auto">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 flex flex-col md:flex-row items-center justify-between gap-6">
             
             <div className="flex items-center space-x-3">
               <IvyLogo className="h-6 w-auto" />

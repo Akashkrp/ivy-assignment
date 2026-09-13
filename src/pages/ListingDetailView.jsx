@@ -91,7 +91,7 @@ export default function ListingDetailView({ user, onOpenLogin, savedListings = [
       
       {/* Top Navigation Bar */}
       <div className="bg-white/95 border-b border-slate-200 sticky top-16 z-30 backdrop-blur-md shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 h-14 flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
             className="flex items-center space-x-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
@@ -117,7 +117,7 @@ export default function ListingDetailView({ user, onOpenLogin, savedListings = [
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-8">
         
         {/* Anomaly Banner if Corrupt or Fake */}
         {(listing.is_corrupt || listing.is_fake) && (

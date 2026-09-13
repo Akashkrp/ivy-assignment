@@ -160,8 +160,8 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
     <div className="min-h-screen pb-16">
       
       {/* Authentic Ivy Homes Hero Banner in Sleek Dark Theme */}
-      <section className="pt-6 pb-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-800 bg-slate-900 min-h-[360px] sm:min-h-[400px] flex items-center">
+      <section className="pt-6 pb-6 px-4 sm:px-6 lg:px-8 xl:px-10 max-w-[1600px] mx-auto">
+        <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-800 bg-slate-900 min-h-[360px] sm:min-h-[420px] flex items-center">
           {/* Photographic Background with Seamless Dark Gradient Overlay */}
           <div className="absolute inset-0 z-0">
             <img 
@@ -173,7 +173,7 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
           </div>
 
-          <div className="relative z-10 p-6 sm:p-10 lg:p-12 max-w-3xl space-y-4">
+          <div className="relative z-10 p-6 sm:p-10 lg:p-14 max-w-4xl space-y-4">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-300 text-xs font-semibold tracking-wide backdrop-blur-sm">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span>
@@ -186,7 +186,7 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
               <span className="text-amber-400 font-extrabold inline-block">zero hassle</span>
             </h1>
 
-            <p className="text-sm sm:text-base text-slate-300 font-normal leading-relaxed max-w-xl">
+            <p className="text-sm sm:text-base text-slate-300 font-normal leading-relaxed max-w-2xl">
               {user 
                 ? 'Ivy Homes verified property marketplace. Browse 3,687 authenticated Bangalore listings across 11 key localities with real-time valuation intelligence.'
                 : 'Ivy Homes buys your home directly and handles everything end to end. We offer guaranteed liquidity, zero brokerage, and cash in hand in 60 days.'
@@ -195,7 +195,7 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
 
             {/* Authenticated State: Instant Search Bar */}
             {user ? (
-              <div className="pt-2 max-w-2xl">
+              <div className="pt-2 max-w-3xl">
                 <div className="relative flex items-center">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                     <Search className="w-5 h-5 text-[#0018A8]" />
@@ -422,7 +422,7 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
         </div>
       ) : (
         /* If Authenticated: Show Full Interactive Marketplace, Filters, & Property Feed */
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 mt-6">
           
           {/* Decluttered Filter Controls Bar */}
           <div className="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 mb-8 shadow-xs">
@@ -644,7 +644,7 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
           ) : (
             <motion.div 
               layout
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6"
             >
               <AnimatePresence mode="popLayout">
                 {pagedListings.map((listing) => (
