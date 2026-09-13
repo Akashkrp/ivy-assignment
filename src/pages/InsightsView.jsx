@@ -468,7 +468,7 @@ export default function InsightsView({ user, onOpenLogin }) {
           </div>
         )}
 
-        {/* TAB 3: API Documentation Discrepancies (22) */}
+        {/* TAB 3: API Documentation Discrepancies (24) */}
         {activeTab === 'discrepancies' && (
           <div className="space-y-6">
             

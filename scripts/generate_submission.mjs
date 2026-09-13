@@ -332,6 +332,7 @@ const submission = {
 };
 
 fs.writeFileSync('submission.json', JSON.stringify(submission, null, 2));
-console.log('Successfully generated submission.json!');
+fs.writeFileSync('public/data/submission.json', JSON.stringify(submission, null, 2));
+console.log('Successfully generated submission.json and public/data/submission.json!');
 console.log('Submission answers summary:', JSON.stringify(submission.answers, null, 2));
 console.log(`Total findings documented: ${findings.length}`);
