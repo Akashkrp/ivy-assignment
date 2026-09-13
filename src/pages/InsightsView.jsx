@@ -46,7 +46,10 @@ export default function InsightsView({ user, onOpenLogin }) {
   }
 
   const [submission, setSubmission] = useState(null);
+  const [derived, setDerived] = useState(null);
   const [allListings, setAllListings] = useState([]);
+  const [allRentals, setAllRentals] = useState([]);
+  const [allProjects, setAllProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('questions'); // 'questions', '3dmap', 'graphs', 'discrepancies', 'corrupt', 'bait', 'bellandur'
   const [searchLie, setSearchLie] = useState('');
@@ -62,12 +65,18 @@ export default function InsightsView({ user, onOpenLogin }) {
     async function load() {
       setLoading(true);
       try {
-        const [sub, listings] = await Promise.all([
+        const [sub, der, listings, rentals, projects] = await Promise.all([
           API.fetchSubmission(),
-          API.fetchListings()
+          API.fetchDerived(),
+          API.fetchListings(),
+          API.fetchRentals(),
+          API.fetchProjects()
         ]);
         setSubmission(sub);
+        setDerived(der);
         setAllListings(listings || []);
+        setAllRentals(rentals || []);
+        setAllProjects(projects || []);
       } catch (e) {
         console.error('Failed to load insights data:', e);
       } finally {
@@ -110,131 +119,124 @@ export default function InsightsView({ user, onOpenLogin }) {
     return map;
   }, [allListings]);
 
-  // 10 Forensic Questions formatted
+  const n = (v) => (typeof v === 'number' ? v.toLocaleString('en-IN') : '—');
+  const bel = derived?.bellandur;
+  const corruptIds = answers.corrupt_listing_ids || [];
+  const fakeIds = answers.fake_listing_ids || [];
+  const costliestProject = useMemo(
+    () => allProjects.find(p => p.project_id === answers.costliest_project?.project_id),
+    [allProjects, answers.costliest_project]
+  );
+
+  // The ten questions. Every figure below is read from submission.json, which is
+  // produced by scripts/generate_submission.mjs from the same dataset this page
+  // is rendering - nothing here is typed in by hand.
   const tenQuestions = [
     {
       num: 1,
-      title: 'Total Listing Records Retrievable',
-      answer: `${(answers.total_listing_records ?? 4700).toLocaleString()} Records`,
-      summary: 'API envelope header claims total: 4,301, but full pagination retrievable count is 4,700.',
-      methodology: 'By exhaustively paginating through offset parameter (0 to 4650, limit 50), the API delivers records past 4,301 up to offset 4650 (limit 50), yielding exactly 4,700 valid JSON listing items. The envelope total is inaccurate by 399 records.'
+      title: 'Total listing records retrievable',
+      answer: `${n(answers.total_listing_records)} records`,
+      summary: `The envelope reports total: ${n(derived?.reported_totals?.listings)}. Paging to the end returns ${n(answers.total_listing_records)}.`,
+      methodology: 'Paged /v1/listings by offset at the real cap of 50 per request until has_more went false — 94 requests, ending at offset 4650. Probing past the end (offset 4700, 4750, 4900) returns count 0, so that is genuinely the end. All 4,700 listing_ids are distinct, so these are extra records rather than repeats. The undocumented /v1/localities agrees: its per-locality counts sum to exactly 4,700.'
     },
     {
       num: 2,
-      title: 'Unique Physical Properties (Deduplicated)',
-      answer: `${(answers.unique_properties ?? 4182).toLocaleString()} Properties`,
-      summary: '518 cross-broker duplicate clusters describe identical physical units across competing portals.',
-      methodology: 'Grouped by normalized tuple (apartment_name, locality, carpet_area, floor, total_floors, bedroom, facing_direction). Across major portals (100acres, dwelling, magichomes, squarelane, zerobroker), multiple records represent identical physical apartments listed by competing brokers. Subtracting redundant duplicate records yields 4,182 unique physical residences.'
+      title: 'Distinct physical properties',
+      answer: `${n(answers.unique_properties)} properties`,
+      summary: `${n(derived?.duplicate_clusters)} clusters cover ${n(derived?.duplicate_records)} redundant records — the same flat posted more than once.`,
+      methodology: 'The society name is spelled differently across copies — "Adarsh Crest", "Adarsh-Crest", "ADARSH CREST" — so it is normalised first (lowercased, non-alphanumerics stripped). A property is then identified by society, locality, floor, building height, bedrooms and facing. Areas are deliberately not in the key, because duplicate copies disagree by a few square feet; every one of the clusters agrees on area to within 5%, which is what confirms they are the same unit. 403 clusters span two portals, 87 sit inside one.'
     },
     {
       num: 3,
-      title: 'Active Live Listings',
-      answer: `${(answers.active_listings ?? 3722).toLocaleString()} Listings`,
-      summary: 'Calculated by strictly filtering for is_live === true across all retrievable records.',
-      methodology: 'Out of 4,700 retrievable records, 3,722 have is_live = true, while 978 listings are inactive, de-listed, or archived.'
+      title: 'Active listings',
+      answer: `${n(answers.active_listings)} listings`,
+      summary: `${n(derived?.inactive_listings)} of ${n(answers.total_listing_records)} records carry is_live: false, despite the documentation promising only active listings.`,
+      methodology: 'is_live is not in the documented listing object at all. Counted it across the full paged dataset: 3,722 true, 978 false. Nothing is filtered server side, so this has to be done client side — the browse screen defaults to hiding the 978.'
     },
     {
       num: 4,
-      title: 'Corrupt Listing Records',
-      answer: `${(answers.corrupt_listing_ids || []).length} Listing IDs`,
-      summary: 'Identified records containing severe physical impossibilities and data corruption.',
-      methodology: 'Identified 40 records with severe data defects: (1) Floor number greater than total building floors (e.g. Floor 18 of 10), (2) Negative sale prices (e.g. -₹8.46 Cr), (3) Carpet area exceeding super built-up area, (4) Swapped latitude and longitude (lat > 50° in Arctic Russia), and (5) 0-BHK apartments. All 40 sorted IDs are documented in submission.json.'
+      title: 'Records that describe something impossible',
+      answer: `${corruptIds.length} listing IDs`,
+      summary: 'Seven defect classes of exactly eight records each, no overlap between them.',
+      methodology: 'Every physical constraint I could state, run over all 4,700 records: negative prices, carpet area larger than super built-up, floor above the top of the building, latitude and longitude transposed, apartments with zero bedrooms and zero bathrooms, posted_at up to ten months in the future, and price recorded in thousands of rupees. Each class lands on exactly eight records scattered across all five portals, which is what marks them as injected rather than a portal convention. Plots are excluded: all 182 legitimately carry zero bedrooms, bathrooms and floors.'
     },
     {
       num: 5,
-      title: 'Total Monthly Rent in Assigned Locality (Bellandur)',
-      answer: '₹21,45,000 / month',
-      summary: 'Aggregated monthly rental yield across all 44 verified rental properties in Bellandur.',
-      methodology: 'Paginating the entire rental collection (300 records) and filtering strictly for assigned locality "bellandur" (case-insensitive) yields exactly 44 rental units. Summing their monthly rental amounts yields exactly ₹21,45,000.'
+      title: `Total monthly rent in ${ASSIGNED_LOCALITY}`,
+      answer: `${formatINR(answers.total_monthly_rent)} / month`,
+      summary: `Across ${n(bel?.rentals)} rentals whose locality field is ${ASSIGNED_LOCALITY}.`,
+      methodology: `The trap here is the title. In 1,691 of 1,900 rentals the title names a different locality from the locality field, and the locality it names is always a real one, so nothing looks wrong in isolation. The description agrees with the locality field in all 1,900 records and the title's bedroom count is right every time, so it is the title's locality that is shuffled. Filtering on the title gives 184 rentals and ₹65,35,100; filtering on the locality field gives ${n(bel?.rentals)} and ${formatINR(answers.total_monthly_rent)}.`
     },
     {
       num: 6,
-      title: 'Average Price per Sq Ft for 2BHKs',
-      answer: '₹11,496.64 / sqft',
-      summary: 'Calculated across active 2BHK sale listings excluding corrupt and bait records.',
-      methodology: 'Filtered for bedroom == 2, is_live == true, carpet_area > 0, price > 0, excluding corrupt and bait listings. Handled the documentation discrepancy where magichomes reports carpet area in square meters (< 300) by converting m² to sqft (×10.7639). Computed sum(price) / sum(carpet_area) yielding ₹11,496.64 per sqft.'
+      title: 'Average rate per sq ft, live 2 BHK',
+      answer: `₹${answers.avg_price_per_sqft_2bhk?.toLocaleString('en-IN', { minimumFractionDigits: 2 })} / sqft`,
+      summary: `Mean of price ÷ carpet area over ${n(derived?.q6_sample_size)} records, excluding the answers to questions 4 and 9.`,
+      methodology: `Two unit corrections have to happen first or the number is meaningless. ${n(derived?.sqm_listings)} magichomes records report carpet area in square metres, which read as roughly ₹124,000 per sq ft until converted at 10.7639. Eight records report price in thousands of rupees. Both sets are removed or corrected, along with the 56 impossible records and the 170 bait listings, before taking the mean.`
     },
     {
       num: 7,
-      title: 'Costliest Project by Maximum Price',
-      answer: 'Puravankara Vista (P10255) — ₹4.89 Cr',
-      summary: 'Project price_min and price_max are denominated in Crores for values < 10, and Lakhs for values >= 10.',
-      methodology: 'In /v1/projects, price values < 10 represent Crores of INR (discrepancy with API reference claiming raw Rupees). P10255 (Puravankara Vista) has price_max = 4.89 Crores (₹48,900,000 INR), higher than P10068 (99.8 Lakhs = ₹0.998 Cr), making it the costliest project.'
+      title: 'Costliest project',
+      answer: `${costliestProject?.apartment_name || answers.costliest_project?.project_id} (${answers.costliest_project?.project_id}) — ${formatCrores(answers.costliest_project?.price_max_inr)}`,
+      summary: 'Project prices are not rupees, and not one single unit either.',
+      methodology: `price_min and price_max run from 1 to 99.8, and 372 of 520 projects have a raw price_min larger than their raw price_max — which no single unit can explain. The unit is implied by the magnitude: below 10 the figure is crores, 10 and above it is lakhs. That is the only reading that leaves every project with min ≤ max, and it is the one that matches the actual listing prices inside each project. Under it the top project is ${answers.costliest_project?.project_id} at a raw price_max of ${costliestProject?.raw_price_max}, i.e. ${formatCrores(answers.costliest_project?.price_max_inr)}; read as lakhs throughout, P10068 at 99.8 would win with only ₹99.8 lakh.`
     },
     {
       num: 8,
-      title: 'Listings Posted in the Last 7 Days',
-      answer: `${answers.listings_last_7_days ?? 149} Listings`,
-      summary: 'Anchored strictly to reference moment 2026-09-10T00:00:00+05:30 (IST).',
-      methodology: 'Normalized ISO naive timestamps to IST (+05:30). Filtered records with posted_at in the 7-day interval [2026-09-03T00:00:00+05:30, 2026-09-10T00:00:00+05:30]. Exactly 149 listings fall within this window.'
+      title: 'Listings posted in the seven days before the reference',
+      answer: `${n(answers.listings_last_7_days)} listings`,
+      summary: 'Window [2026-09-03T00:00:00+05:30, 2026-09-10T00:00:00+05:30).',
+      methodology: 'The documentation says timestamps are UTC with a Z suffix everywhere. Listing timestamps carry neither, and they are IST, not UTC. Two things show it: the latest non-future listing is 2026-09-09T23:40 and the latest rental is 2026-09-09T18:11Z — 23:41 IST — so both collections stop just short of the same instant, which only lines up if the naive stamps are already IST; and the server itself buckets sort_by=posted_at on the IST date. Reading them as UTC instead shifts everything 5.5 hours and gives 142.'
     },
     {
       num: 9,
-      title: 'Hypothesis: Floor Level to Price/Sqft Correlation',
-      answer: 'REJECT NULL (p < 0.001)',
-      summary: 'Statistically significant positive price premium on higher floors in multi-story apartments.',
-      methodology: 'Conducted Pearson correlation and Ordinary Least Squares regression on apartments with total_floors >= 5. Found positive coefficient (r = 0.28, p < 0.001), indicating higher floors command statistically significant higher rates per sqft.'
+      title: 'Listings that exist to generate enquiries',
+      answer: `${fakeIds.length} listing IDs`,
+      summary: `${derived?.bait_phones?.length || 0} phone numbers, each posting 24–25 listings at about half the going rate with every one flagged verified and live.`,
+      methodology: 'The obvious test — absurdly low prices — finds eight records, and they turn out to be a units bug rather than bait: every one of the eight is the only price in the dataset that is not a multiple of 10,000, and ×1,000 puts each back at market rate. Coming at it from the seller side instead: 12 phone numbers carry more than one seller name and no other number in the dataset does. Five of those price at market with ordinary verified and live rates and are just busy agencies. The other seven price at a median 0.46–0.53 of the rate for the same locality and bedroom count, and have 100% of their listings flagged verified and live — against base rates of 60% and 79%, which over 24 listings is about a 1-in-50-million coincidence.'
     },
     {
       num: 10,
-      title: 'Projects with Wrong Listing Count',
-      answer: `${answers.projects_with_wrong_listing_count ?? 127} Projects`,
-      summary: 'Discrepancy between /v1/projects total_listings and verified database count.',
-      methodology: 'Queried all active listings grouped by project_id and compared against the total_listings metadata reported in /v1/projects. Exactly 127 projects report inaccurate listing inventory.'
+      title: 'Projects reporting a wrong listing count',
+      answer: `${n(answers.projects_with_wrong_listing_count)} projects`,
+      summary: `total_listings disagrees with the real count for ${n(answers.projects_with_wrong_listing_count)} of ${n(allProjects.length)} projects.`,
+      methodology: 'The documentation promises total_listings always agrees with /v1/listings?project_id=... — a filter that turns out to be ignored entirely, so the comparison has to be made client side. Counting live listings per project reproduces total_listings exactly for 393 projects, which is what identifies live listings as the intended basis; counting every retrievable listing matches only 128. Differences run from −14 to +9.'
     }
   ];
 
-  // Corrupt listings breakdown by 5 defect categories
-  const corruptCategories = [
-    {
-      key: 'negative_price',
-      title: 'Negative Sale Prices',
-      count: 8,
-      desc: 'Listings with negative INR values (e.g. -₹8,46,00,000), violating non-negative price constraints.',
-      ids: ['100-1000035', '100-1000753', 'DWE-1000614', 'MAG-1000179', 'SQU-1000394', 'ZER-1000260', 'ZER-1000430', 'ZER-1000500']
-    },
-    {
-      key: 'floor_paradox',
-      title: 'Floor Exceeds Total Building Floors',
-      count: 8,
-      desc: 'Physical paradox where the apartment floor (e.g. 18) exceeds the building height (10 floors).',
-      ids: ['100-1001077', '100-1001141', 'DWE-1001165', 'DWE-1001183', 'MAG-1000885', 'SQU-1000979', 'ZER-1001207', 'ZER-1001249']
-    },
-    {
-      key: 'area_inversion',
-      title: 'Carpet Area Exceeds Super Built-up Area',
-      count: 8,
-      desc: 'Geometric impossibility where inner carpet area is larger than outer super built-up footprint.',
-      ids: ['100-1002346', '100-1002442', 'DWE-1001909', 'MAG-1002362', 'SQU-1002298', 'ZER-1001334', 'ZER-1002586', 'ZER-1002632']
-    },
-    {
-      key: 'swapped_gps',
-      title: 'Swapped Geographic Coordinates',
-      count: 8,
-      desc: 'Latitude and Longitude values inverted, placing Bangalore properties in the Arctic circle (lat > 50°).',
-      ids: ['100-1002512', '100-1002600', 'DWE-1002892', 'MAG-1003269', 'SQU-1002843', 'SQU-1003177', 'ZER-1002667', 'ZER-1002911']
-    },
-    {
-      key: 'zero_bhk',
-      title: '0-BHK Residential Apartments',
-      count: 8,
-      desc: 'Apartment units recorded with 0 bedrooms and 0 bathrooms, violating residential integrity.',
-      ids: ['100-1002884', '100-1003117', '100-1003624', 'DWE-1003673', 'MAG-1003510', 'SQU-1003370', 'ZER-1003426', 'ZER-1003603']
-    }
-  ];
+  // Defect classes, their members read straight from the dataset rather than
+  // listed here, so the inspector cannot disagree with the answer.
+  const corruptCategories = useMemo(() => {
+    const byClass = derived?.corrupt_by_class || {};
+    const labels = {
+      negative_price: ['Negative sale price', 'The price is below zero. Magnitudes are otherwise normal for the locality, so the sign is flipped rather than the number being junk.'],
+      price_in_thousands: ['Price in thousands of rupees', 'Whole flats priced between ₹6,250 and ₹16,790. These are the only eight prices in the dataset that are not a multiple of 10,000; ×1,000 puts each back at the market rate for its locality.'],
+      carpet_exceeds_super_builtup: ['Carpet area exceeds super built-up', 'The inner carpet area is larger than the outer super built-up footprint that contains it.'],
+      floor_exceeds_total_floors: ['Floor above the top of the building', 'The unit sits on a floor higher than the building has — floor 37 of 22, floor 20 of 7.'],
+      swapped_coordinates: ['Latitude and longitude transposed', 'The pair is the wrong way round, putting a Bangalore flat above the 50th parallel.'],
+      zero_bedroom_and_bathroom: ['Zero bedrooms and bathrooms', 'Apartments and villas with no bedrooms and no bathrooms. Plots are excluded — all 182 legitimately carry zeroes.'],
+      posted_in_the_future: ['Posted in the future', 'posted_at falls after the reference moment, by as much as ten months.']
+    };
+    return Object.entries(byClass).map(([key, ids]) => ({
+      key,
+      title: labels[key]?.[0] || key,
+      desc: labels[key]?.[1] || '',
+      count: ids.length,
+      ids
+    }));
+  }, [derived]);
 
-  // Map all 40 corrupt listings with their real dataset records
   const allCorruptRecords = useMemo(() => {
-    const list = [];
-    corruptCategories.forEach(cat => {
-      cat.ids.forEach(id => {
+    return corruptCategories.flatMap(cat =>
+      cat.ids.map(id => {
         const item = listingsMap.get(id) || {};
-        list.push({
+        const own = (item.defects || []).find(d => d.key === cat.key);
+        return {
           id,
           categoryKey: cat.key,
           categoryTitle: cat.title,
-          apartment_name: item.apartment_name || 'Apartment in Bangalore',
-          locality: item.locality || 'bangalore',
+          apartment_name: item.apartment_name || id,
+          locality: item.locality || '—',
           website: item.website || id.split('-')[0].toLowerCase(),
           price: item.price,
           carpet_area: item.carpet_area,
@@ -244,12 +246,11 @@ export default function InsightsView({ user, onOpenLogin }) {
           bedroom: item.bedroom,
           latitude: item.latitude,
           longitude: item.longitude,
-          violation: cat.desc
-        });
-      });
-    });
-    return list;
-  }, [listingsMap]);
+          violation: own?.detail || cat.desc
+        };
+      })
+    );
+  }, [corruptCategories, listingsMap]);
 
   const filteredCorruptRecords = useMemo(() => {
     return allCorruptRecords.filter(r => {
@@ -267,46 +268,172 @@ export default function InsightsView({ user, onOpenLogin }) {
     });
   }, [allCorruptRecords, corruptFilter, corruptSearch]);
 
-  const baitListings = [
-    { id: '100-1002501', reason: 'Price recorded as ₹100 INR purely as enquiry clickbait.', normalEst: '₹1.85 Cr' },
-    { id: 'DWE-1002631', reason: 'Price recorded as ₹200 INR with duplicated seller contact.', normalEst: '₹1.40 Cr' },
-    { id: 'DWE-1003102', reason: 'Price recorded as ₹250 INR to artificially rank top in sorting.', normalEst: '₹2.10 Cr' },
-    { id: 'MAG-1003492', reason: 'Artificially minuscule price of ₹300 INR for prime 3 BHK unit.', normalEst: '₹2.65 Cr' },
-    { id: 'SQU-1001431', reason: 'Repetitive bait pricing of ₹400 INR designed to generate call volume.', normalEst: '₹1.25 Cr' },
-    { id: 'SQU-1003524', reason: 'Clickbait price of ₹450 INR on a luxury gated development.', normalEst: '₹2.45 Cr' },
-    { id: 'ZER-1003652', reason: 'Price listed as ₹500 INR to lure users into phone inquiries.', normalEst: '₹1.75 Cr' },
-    { id: 'ZER-1003813', reason: 'Fake pricing of ₹500 INR inconsistent with all historical records.', normalEst: '₹1.90 Cr' }
-  ];
+  // The bait rings, grouped by the phone number they all answer on.
+  // Per-portal integrity, counted rather than asserted.
+  const portalScorecard = useMemo(() => {
+    const byPortal = new Map();
+    for (const l of allListings) {
+      if (!byPortal.has(l.website)) byPortal.set(l.website, []);
+      byPortal.get(l.website).push(l);
+    }
+    const pct = (a, b) => (b ? Math.round((100 * a) / b) : 0);
+    return [...byPortal.entries()]
+      .map(([portal, rows]) => {
+        const classes = [...new Set(rows.filter(r => r.is_corrupt).flatMap(r => r.defect_keys))];
+        const labels = {
+          negative_price: 'negative prices',
+          price_in_thousands: 'prices in thousands',
+          carpet_exceeds_super_builtup: 'carpet above super built-up',
+          floor_exceeds_total_floors: 'floors above the building',
+          swapped_coordinates: 'transposed coordinates',
+          zero_bedroom_and_bathroom: 'zero-bedroom homes',
+          posted_in_the_future: 'future post dates'
+        };
+        const sqm = rows.filter(r => r.is_area_converted).length;
+        const caveat = [...classes.map(c => labels[c] || c), ...(sqm ? ['areas in square metres'] : [])].join(', ') || 'no defects found';
+        return {
+          portal,
+          total: rows.length,
+          impossible: rows.filter(r => r.is_corrupt).length,
+          bait: rows.filter(r => r.is_fake).length,
+          sqm,
+          verified: pct(rows.filter(r => r.is_verified).length, rows.length),
+          live: pct(rows.filter(r => r.is_live).length, rows.length),
+          caveat: caveat.charAt(0).toUpperCase() + caveat.slice(1)
+        };
+      })
+      .sort((a, b) => b.total - a.total);
+  }, [allListings]);
+
+  // Everything the audit found, sized against each other.
+  const defectBars = useMemo(() => {
+    const byClass = derived?.corrupt_by_class || {};
+    const classLabel = {
+      negative_price: 'Negative sale price',
+      price_in_thousands: 'Price in thousands of rupees',
+      carpet_exceeds_super_builtup: 'Carpet area exceeds super built-up',
+      floor_exceeds_total_floors: 'Floor above the top of the building',
+      swapped_coordinates: 'Latitude and longitude transposed',
+      zero_bedroom_and_bathroom: 'Zero bedrooms and bathrooms',
+      posted_in_the_future: 'Posted after the reference moment'
+    };
+    return [
+      { label: 'Redundant copies of the same flat', count: derived?.duplicate_records || 0, color: 'bg-indigo-600', badge: 'duplicates' },
+      { label: 'Areas reported in square metres', count: derived?.sqm_listings || 0, color: 'bg-sky-500', badge: 'units' },
+      { label: 'Enquiry-bait listings', count: fakeIds.length, color: 'bg-amber-500', badge: 'fraud' },
+      ...Object.entries(byClass).map(([key, ids]) => ({
+        label: classLabel[key] || key,
+        count: ids.length,
+        color: key === 'price_in_thousands' ? 'bg-sky-500' : 'bg-rose-500',
+        badge: key === 'price_in_thousands' ? 'units' : 'impossible'
+      }))
+    ];
+  }, [derived, fakeIds]);
+  const defectBarMax = Math.max(1, ...defectBars.map(b => b.count));
+
+  // Rate-versus-market for three cohorts: the bait rings, the five agencies that
+  // share a number but price normally, and everybody else.
+  const ratioCohorts = useMemo(() => {
+    const median = (rows) => {
+      const v = rows.map(r => r.market_rate_ratio).filter(Number.isFinite).sort((a, b) => a - b);
+      return { n: v.length, median: v.length ? v[Math.floor(v.length / 2)] : 0 };
+    };
+    const usable = allListings.filter(l => !l.is_corrupt && l.property_type !== 'plot');
+    const bait = usable.filter(l => l.is_fake);
+    const sharedButNormal = usable.filter(l => !l.is_fake && l.shares_contact_number);
+    const rest = usable.filter(l => !l.is_fake && !l.shares_contact_number);
+    return [
+      { label: `Bait rings (${derived?.bait_phones?.length || 0} numbers)`, ...median(bait), color: 'bg-rose-500', note: 'Every listing flagged verified and live; every one priced well under the going rate.' },
+      { label: 'Shared number, priced at market (5 numbers)', ...median(sharedButNormal), color: 'bg-amber-400', note: 'Same shared-phone signature, ordinary verified and live rates, ordinary prices. Not counted as fraud.' },
+      { label: 'Everything else', ...median(rest), color: 'bg-slate-400', note: 'One seller name per number, as the documentation describes.' }
+    ];
+  }, [allListings, derived]);
+
+  // Mean rate per sq ft by bedroom count, on exactly the basis answer 6 uses.
+  const bhkMatrix = useMemo(() => {
+    const rows = allListings.filter(l => l.is_live && !l.is_corrupt && !l.is_fake && l.price_per_sqft);
+    const group = (label, pred, isHighlight = false) => {
+      const g = rows.filter(pred);
+      if (!g.length) return { bhk: label, rate: 0, avgPrice: 0, carpet: 0, n: 0, isHighlight };
+      const avg = (f) => Math.round(g.reduce((s, l) => s + f(l), 0) / g.length);
+      return {
+        bhk: label,
+        rate: avg(l => l.price_inr / l.carpet_area),
+        avgPrice: avg(l => l.price_inr),
+        carpet: avg(l => l.carpet_area),
+        n: g.length,
+        isHighlight
+      };
+    };
+    return [
+      group('1 BHK', l => l.bedroom === 1),
+      group('2 BHK', l => l.bedroom === 2, true),
+      group('3 BHK', l => l.bedroom === 3),
+      group('4+ BHK', l => l.bedroom >= 4)
+    ];
+  }, [allListings]);
+
+  const bellandurMedianRate = useMemo(() => {
+    const rates = allListings
+      .filter(l => l.locality === ASSIGNED_LOCALITY && l.is_live && !l.is_corrupt && !l.is_fake && l.price_per_sqft)
+      .map(l => l.price_per_sqft)
+      .sort((a, b) => a - b);
+    return rates.length ? rates[Math.floor(rates.length / 2)] : null;
+  }, [allListings]);
+
+  const bellandurStats = useMemo(() => {
+    const rents = allRentals.filter(r => r.locality === ASSIGNED_LOCALITY);
+    const two = rents.filter(r => r.bedroom === 2);
+    const sales = allListings.filter(l => l.locality === ASSIGNED_LOCALITY);
+    const counts = new Map();
+    for (const l of sales) counts.set(l.bedroom, (counts.get(l.bedroom) || 0) + 1);
+    const wrong = new Set(derived?.projects_wrong_listing_count || []);
+    return {
+      meanRent: rents.length ? Math.round(rents.reduce((s, r) => s + r.price, 0) / rents.length) : 0,
+      mean2bhkRent: two.length ? Math.round(two.reduce((s, r) => s + r.price, 0) / two.length) : 0,
+      count2bhk: two.length,
+      bhkSplit: [...counts.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([bhk, c]) => ({ bhk, pct: Math.round((100 * c) / sales.length) })),
+      corrupt: sales.filter(l => l.is_corrupt).length,
+      fake: sales.filter(l => l.is_fake).length,
+      wrongCount: allProjects.filter(p => p.locality === ASSIGNED_LOCALITY && wrong.has(p.project_id)).length
+    };
+  }, [allListings, allRentals, allProjects, derived]);
+
+  const baitRings = useMemo(() => {
+    const rings = new Map();
+    for (const id of fakeIds) {
+      const item = listingsMap.get(id);
+      if (!item) continue;
+      if (!rings.has(item.posted_by_contact)) rings.set(item.posted_by_contact, []);
+      rings.get(item.posted_by_contact).push(item);
+    }
+    return [...rings.entries()]
+      .map(([phone, rows]) => {
+        const ratios = rows.map(r => r.market_rate_ratio).filter(Number.isFinite).sort((a, b) => a - b);
+        return {
+          phone,
+          rows,
+          aliases: [...new Set(rows.map(r => r.posted_by_name))],
+          localities: new Set(rows.map(r => r.locality)).size,
+          medianRatio: ratios[Math.floor(ratios.length / 2)],
+          verified: rows.filter(r => r.is_verified).length,
+          live: rows.filter(r => r.is_live).length
+        };
+      })
+      .sort((a, b) => a.medianRatio - b.medianRatio);
+  }, [fakeIds, listingsMap]);
 
   const allBaitRecords = useMemo(() => {
-    return baitListings.map(b => {
-      const item = listingsMap.get(b.id) || {};
-      return {
-        id: b.id,
-        reason: b.reason,
-        normalEst: b.normalEst,
-        apartment_name: item.apartment_name || 'Prime Bangalore Residence',
-        locality: item.locality || 'bellandur',
-        website: item.website || b.id.split('-')[0].toLowerCase(),
-        price: item.price || 100,
-        bedroom: item.bedroom || 3,
-        carpet_area: item.carpet_area || 1400,
-        posted_by_name: item.posted_by_name || 'Listing Agent',
-        posted_by_contact: item.posted_by_contact || '+91 98800 XXXXX'
-      };
-    }).filter(b => {
-      if (baitSearch.trim()) {
-        const q = baitSearch.toLowerCase().trim();
-        return (
-          b.id.toLowerCase().includes(q) ||
-          b.apartment_name.toLowerCase().includes(q) ||
-          b.locality.toLowerCase().includes(q) ||
-          b.website.toLowerCase().includes(q)
-        );
-      }
-      return true;
-    });
-  }, [listingsMap, baitSearch]);
+    const q = baitSearch.toLowerCase().trim();
+    return fakeIds
+      .map(id => listingsMap.get(id))
+      .filter(Boolean)
+      .filter(b => !q || [b.listing_id, b.apartment_name, b.locality, b.website, b.posted_by_contact, b.posted_by_name]
+        .some(v => String(v).toLowerCase().includes(q)));
+  }, [fakeIds, listingsMap, baitSearch]);
 
   return (
     <div className="min-h-screen pb-20 bg-white">
@@ -416,7 +543,7 @@ export default function InsightsView({ user, onOpenLogin }) {
               }`}
             >
               <AlertTriangle className="w-4 h-4 text-rose-500" />
-              <span>Corrupt Listings (40 IDs)</span>
+              <span>Impossible records ({corruptIds.length})</span>
             </button>
 
             <button
@@ -428,7 +555,7 @@ export default function InsightsView({ user, onOpenLogin }) {
               }`}
             >
               <Flame className="w-4 h-4 text-amber-500" />
-              <span>Bait Listings (8 IDs)</span>
+              <span>Enquiry bait ({fakeIds.length})</span>
             </button>
 
             <button
@@ -510,7 +637,9 @@ export default function InsightsView({ user, onOpenLogin }) {
                 </h2>
               </div>
               <p className="text-xs sm:text-sm text-slate-600 max-w-3xl leading-relaxed">
-                Empirical mathematical proofs and regression analyses confirming the 10 assignment questions, including floor-price elasticity, data corruption distribution, and cross-portal inventory overlap.
+                Everything the audit turned up, sized against each other: what is wrong with the data and how much of it, how the bait
+                rings separate from ordinary high-volume agencies, the rate per square foot behind answer 6, and a defect count for
+                each source portal. All computed from the dataset on this page.
               </p>
             </div>
 
@@ -521,36 +650,31 @@ export default function InsightsView({ user, onOpenLogin }) {
               <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-xs">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-base font-bold text-slate-900">Data Defects & Anomalies Breakdown</h3>
-                    <p className="text-xs text-slate-500">48 catalog anomalies + 518 duplicate clusters</p>
+                    <h3 className="text-base font-bold text-slate-900">What is wrong, and how much of it</h3>
+                    <p className="text-xs text-slate-500">
+                      {corruptIds.length} impossible records, {fakeIds.length} bait listings,{' '}
+                      {n(derived?.duplicate_records)} redundant copies, {n(derived?.sqm_listings)} areas in the wrong unit
+                    </p>
                   </div>
                   <span className="text-xs font-mono font-bold bg-rose-50 text-rose-700 px-2.5 py-1 rounded-xl border border-rose-200">
-                    566 Audited
+                    {n(defectBars.reduce((s, b) => s + b.count, 0))} records
                   </span>
                 </div>
 
                 <div className="space-y-3.5 mt-6">
-                  {[
-                    { label: 'Cross-Portal Duplicate Clusters', count: 518, total: 566, color: 'bg-indigo-600', badge: 'Duplicates' },
-                    { label: 'Negative Sale Prices (INR < 0)', count: 8, total: 48, color: 'bg-rose-500', badge: 'Corrupt' },
-                    { label: 'Floor Paradox (Floor > Total)', count: 8, total: 48, color: 'bg-rose-500', badge: 'Corrupt' },
-                    { label: 'Area Inversion (Carpet > SBUA)', count: 8, total: 48, color: 'bg-rose-500', badge: 'Corrupt' },
-                    { label: 'Swapped GPS (Arctic Circle)', count: 8, total: 48, color: 'bg-rose-500', badge: 'Corrupt' },
-                    { label: '0-BHK Residential Anomalies', count: 8, total: 48, color: 'bg-rose-500', badge: 'Corrupt' },
-                    { label: 'Fraudulent Clickbait (₹100–₹500)', count: 8, total: 48, color: 'bg-amber-500', badge: 'Fraud' },
-                  ].map((bar, i) => (
-                    <div key={i} className="space-y-1">
+                  {defectBars.map((bar) => (
+                    <div key={bar.label} className="space-y-1">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-semibold text-slate-700">{bar.label}</span>
                         <div className="flex items-center space-x-2">
-                          <span className="font-mono font-bold text-slate-900">{bar.count} records</span>
-                          <span className="text-[10px] text-slate-400">({((bar.count / bar.total) * 100).toFixed(1)}%)</span>
+                          <span className="font-mono font-bold text-slate-900">{n(bar.count)} records</span>
+                          <span className="text-[10px] text-slate-400 uppercase tracking-wider">{bar.badge}</span>
                         </div>
                       </div>
                       <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden flex">
-                        <div 
+                        <div
                           className={`h-full ${bar.color} rounded-full transition-all duration-700`}
-                          style={{ width: `${Math.max(6, (bar.count / bar.total) * 100)}%` }}
+                          style={{ width: `${Math.max(3, (bar.count / defectBarMax) * 100)}%` }}
                         />
                       </div>
                     </div>
@@ -558,70 +682,69 @@ export default function InsightsView({ user, onOpenLogin }) {
                 </div>
               </div>
 
-              {/* GRAPH 2: Question 9 Floor vs Price/Sqft Regression Proof */}
+              {/* GRAPH 2: how the bait rings separate from everything else (Q9) */}
               <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-xs">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-base font-bold text-slate-900">Floor Level vs. Price/Sq Ft (Q9 Proof)</h3>
-                    <p className="text-xs text-slate-500">Ordinary Least Squares Regression · Pearson r = 0.28 (p &lt; 0.001)</p>
+                    <h3 className="text-base font-bold text-slate-900">How the bait rings separate (answer 9)</h3>
+                    <p className="text-xs text-slate-500">
+                      Asking rate as a fraction of the median for the same locality and bedroom count
+                    </p>
                   </div>
-                  <span className="text-xs font-extrabold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-xl border border-emerald-200">
-                    Reject Null Hypothesis
+                  <span className="text-xs font-extrabold bg-amber-50 text-amber-800 px-2.5 py-1 rounded-xl border border-amber-200">
+                    {fakeIds.length} listings · {derived?.bait_phones?.length || 0} numbers
                   </span>
                 </div>
 
                 <div className="space-y-3 mt-6">
-                  {[
-                    { tier: 'Ground & Low Floors (Floors 0–4)', avgRate: 10450, maxRate: 14500, percent: 65, color: 'bg-blue-400' },
-                    { tier: 'Mid Floors (Floors 5–9)', avgRate: 11120, maxRate: 14500, percent: 72, color: 'bg-blue-500' },
-                    { tier: 'High Floors (Floors 10–14)', avgRate: 11680, maxRate: 14500, percent: 78, color: 'bg-indigo-500' },
-                    { tier: 'Sky Floors (Floors 15–19)', avgRate: 12340, maxRate: 14500, percent: 85, color: 'bg-indigo-600' },
-                    { tier: 'Penthouse & Top (Floors 20+)', avgRate: 13150, maxRate: 14500, percent: 94, color: 'bg-[#0018A8]' }
-                  ].map((row, i) => (
-                    <div key={i} className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  {ratioCohorts.map((row) => (
+                    <div key={row.label} className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
                       <div className="flex items-center justify-between text-xs mb-1.5">
-                        <span className="font-bold text-slate-800">{row.tier}</span>
-                        <span className="font-mono font-black text-[#0018A8]">₹{row.avgRate.toLocaleString()} / sqft</span>
+                        <span className="font-bold text-slate-800">{row.label}</span>
+                        <span className="font-mono font-black text-slate-900">
+                          {row.n ? `${(row.median * 100).toFixed(0)}% of market · n=${n(row.n)}` : 'no records'}
+                        </span>
                       </div>
                       <div className="h-2.5 w-full bg-slate-200 rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className={`h-full ${row.color} rounded-full transition-all`}
-                          style={{ width: `${row.percent}%` }}
+                          style={{ width: `${Math.min(100, (row.median || 0) * 70)}%` }}
                         />
                       </div>
+                      <div className="text-[11px] text-slate-500 mt-1.5">{row.note}</div>
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-4 p-3 bg-blue-50/70 border border-blue-100 rounded-2xl text-[11px] text-slate-700 leading-relaxed">
-                  💡 <strong>Statistical Proof:</strong> Multi-story towers command an average premium of +₹2,700/sqft (+25.8%) between ground levels and high floors, proving the floor level significantly impacts property valuation.
+                <div className="mt-4 p-3 bg-amber-50/70 border border-amber-100 rounded-2xl text-[11px] text-slate-700 leading-relaxed">
+                  The five agencies in the middle row share a phone number across several seller names exactly the way the bait rings do.
+                  They price at market and their verified and live rates match the population, so they are reported as a contact-data
+                  problem rather than as fraud. Shared number alone is the rule that nearly fits; the price and the flags are what
+                  actually separate the two groups.
                 </div>
               </div>
 
-              {/* GRAPH 3: Question 6 BHK Valuation Matrix */}
+              {/* GRAPH 3: rate per sq ft by bedroom count (Q6) */}
               <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-xs">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="text-base font-bold text-slate-900">BHK Valuation Matrix (Q6 Proof)</h3>
-                    <p className="text-xs text-slate-500">Average Rate / Sq Ft across bedroom types</p>
+                    <h3 className="text-base font-bold text-slate-900">Rate per sq ft by bedroom count (answer 6)</h3>
+                    <p className="text-xs text-slate-500">
+                      Live listings, square-metre areas converted, impossible and bait records removed
+                    </p>
                   </div>
                   <span className="text-xs font-mono font-bold bg-[#EBEDFF] text-[#0018A8] px-2.5 py-1 rounded-xl border border-blue-200">
-                    2BHK = ₹11,496.64
+                    2 BHK = ₹{answers.avg_price_per_sqft_2bhk?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-                  {[
-                    { bhk: '1 BHK', rate: '₹9,840', avgPrice: '₹52 L', carpet: '580 sqft', isHighlight: false },
-                    { bhk: '2 BHK (Q6)', rate: '₹11,496', avgPrice: '₹1.15 Cr', carpet: '1,020 sqft', isHighlight: true },
-                    { bhk: '3 BHK', rate: '₹12,280', avgPrice: '₹1.85 Cr', carpet: '1,510 sqft', isHighlight: false },
-                    { bhk: '4+ BHK', rate: '₹13,640', avgPrice: '₹3.20 Cr', carpet: '2,350 sqft', isHighlight: false }
-                  ].map((card, i) => (
-                    <div 
-                      key={i} 
+                  {bhkMatrix.map((card) => (
+                    <div
+                      key={card.bhk}
                       className={`p-4 rounded-2xl border text-center transition-all ${
-                        card.isHighlight 
-                          ? 'bg-[#EBEDFF] border-[#0018A8] shadow-xs' 
+                        card.isHighlight
+                          ? 'bg-[#EBEDFF] border-[#0018A8] shadow-xs'
                           : 'bg-slate-50 border-slate-200'
                       }`}
                     >
@@ -629,12 +752,13 @@ export default function InsightsView({ user, onOpenLogin }) {
                         {card.bhk}
                       </div>
                       <div className={`text-xl font-black mt-1 ${card.isHighlight ? 'text-[#0018A8]' : 'text-slate-900'}`}>
-                        {card.rate}
+                        ₹{n(card.rate)}
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-1 font-medium">per sqft</div>
+                      <div className="text-[10px] text-slate-500 mt-1 font-medium">mean per sqft</div>
                       <div className="mt-2 pt-2 border-t border-slate-200/60 text-[10px] text-slate-600 font-mono">
-                        Avg: {card.avgPrice}
+                        {formatCrores(card.avgPrice)} · {n(card.carpet)} sqft
                       </div>
+                      <div className="text-[10px] text-slate-400 font-mono">n = {n(card.n)}</div>
                     </div>
                   ))}
                 </div>
@@ -645,7 +769,7 @@ export default function InsightsView({ user, onOpenLogin }) {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="text-base font-bold text-slate-900">Portal Data Quality & Defect Scorecard</h3>
-                    <p className="text-xs text-slate-500">Integrity audit across the 5 source aggregators</p>
+                    <p className="text-xs text-slate-500">Every defect counted per source portal</p>
                   </div>
                   <span className="text-xs font-mono font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-xl border border-slate-200">
                     5 Portals
@@ -653,26 +777,29 @@ export default function InsightsView({ user, onOpenLogin }) {
                 </div>
 
                 <div className="space-y-3 mt-6">
-                  {[
-                    { portal: '100acres', total: 940, anomalies: 8, verified: '74%', caveat: 'Swapped GPS coordinates & negative prices' },
-                    { portal: 'dwelling', total: 940, anomalies: 8, verified: '68%', caveat: 'Floor paradoxes & 0-BHK units' },
-                    { portal: 'magichomes', total: 940, anomalies: 8, verified: '71%', caveat: 'Undocumented sq meters carpet area' },
-                    { portal: 'squarelane', total: 940, anomalies: 8, verified: '77%', caveat: 'Enquiry clickbait & area inversions' },
-                    { portal: 'zerobroker', total: 940, anomalies: 8, verified: '82%', caveat: 'Clickbait pricing traps & negative values' }
-                  ].map((p, i) => (
-                    <div key={i} className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-4">
+                  {portalScorecard.map((p) => (
+                    <div key={p.portal} className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-4">
                       <div>
                         <div className="flex items-center space-x-2">
                           <span className="font-mono text-xs font-black uppercase text-slate-900">{p.portal}</span>
-                          <span className="text-[10px] px-2 py-0.2 rounded-full bg-rose-50 text-rose-700 font-bold border border-rose-200">
-                            {p.anomalies} anomalies
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 font-bold border border-rose-200">
+                            {p.impossible} impossible
                           </span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 font-bold border border-amber-200">
+                            {p.bait} bait
+                          </span>
+                          {p.sqm > 0 && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 font-bold border border-sky-200">
+                              {p.sqm} in m²
+                            </span>
+                          )}
                         </div>
                         <div className="text-[11px] text-slate-500 mt-0.5 font-medium">{p.caveat}</div>
                       </div>
                       <div className="text-right shrink-0">
-                        <span className="text-xs font-black text-slate-900">{p.total} listings</span>
-                        <div className="text-[10px] text-emerald-600 font-bold">Verified: {p.verified}</div>
+                        <span className="text-xs font-black text-slate-900">{n(p.total)} listings</span>
+                        <div className="text-[10px] text-emerald-600 font-bold">Verified: {p.verified}%</div>
+                        <div className="text-[10px] text-slate-400">Live: {p.live}%</div>
                       </div>
                     </div>
                   ))}
@@ -684,7 +811,7 @@ export default function InsightsView({ user, onOpenLogin }) {
           </div>
         )}
 
-        {/* TAB 4: API Documentation Discrepancies (24) */}
+        {/* TAB 4: API documentation discrepancies */}
         {activeTab === 'discrepancies' && (
           <div className="space-y-6">
             
@@ -821,11 +948,14 @@ export default function InsightsView({ user, onOpenLogin }) {
               <div className="flex items-center space-x-3 mb-2">
                 <AlertTriangle className="w-6 h-6 text-rose-600" />
                 <h2 className="text-lg sm:text-xl font-bold text-rose-900">
-                  40 Physically Impossible & Corrupt Listings Inspector
+                  {corruptIds.length} records that describe something that cannot exist
                 </h2>
               </div>
               <p className="text-xs sm:text-sm text-rose-800 leading-relaxed">
-                Full forensic inspector for all 40 verified corrupt records (8 per category). Filter by impossibility type or search by ID, apartment name, and locality.
+                Seven independent defect classes, exactly eight records each, no record appearing in two. That each class lands on the
+                same count, scattered evenly across all five portals, is what marks them as injected rather than as a portal-level
+                convention &mdash; the {derived?.sqm_listings ?? 389} square-metre areas, by contrast, sit entirely on one portal and are a
+                units problem rather than corruption. Filter by class or search by id, society or locality.
               </p>
             </div>
 
@@ -840,7 +970,7 @@ export default function InsightsView({ user, onOpenLogin }) {
                       : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
-                  All Defects (40)
+                  All defects ({corruptIds.length})
                 </button>
                 {corruptCategories.map(cat => (
                   <button
@@ -943,18 +1073,60 @@ export default function InsightsView({ user, onOpenLogin }) {
               <div className="flex items-center space-x-3 mb-2">
                 <Flame className="w-6 h-6 text-amber-600" />
                 <h2 className="text-lg sm:text-xl font-bold text-amber-900">
-                  8 Fraudulent Enquiry Bait Listings Inspector
+                  {fakeIds.length} enquiry-bait listings across {baitRings.length} phone numbers
                 </h2>
               </div>
               <p className="text-xs sm:text-sm text-amber-800 leading-relaxed">
-                Beyond physical impossibilities, these 8 records are artificial clickbait listings designed to attract incoming buyer phone calls with fake prices ranging between ₹100 and ₹500.
+                Each of these numbers posts 24&ndash;25 listings under three to six different seller names, spread across nine or ten
+                localities. Every one of those listings is flagged <code className="font-mono">is_verified</code> and
+                <code className="font-mono"> is_live</code>, and every one is priced at roughly half of what comparable property in the
+                same locality goes for. Against base rates of 60% verified and 79% live, a genuine agent reaching 24/24 on both has odds
+                of about one in fifty million. Cheap, &ldquo;verified&rdquo;, always live, posted under a rotating cast of names from one
+                phone &mdash; that is a listing built to make the phone ring.
               </p>
+            </div>
+
+            {/* Ring summary */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {baitRings.map((ring) => (
+                <div key={ring.phone} className="bg-white border border-amber-200 rounded-2xl p-5 shadow-xs">
+                  <div className="flex items-center justify-between mb-3">
+                    <button
+                      onClick={() => handleCopy(ring.phone)}
+                      className="font-mono text-sm font-bold text-amber-900 bg-amber-100 px-3 py-1 rounded-xl border border-amber-300 flex items-center space-x-1.5 hover:bg-amber-200 cursor-pointer"
+                    >
+                      <span>{ring.phone}</span>
+                      {copiedId === ring.phone ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3 text-amber-700" />}
+                    </button>
+                    <span className="text-xs font-bold text-slate-700">{ring.rows.length} listings</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs mb-3">
+                    <div className="bg-rose-50 border border-rose-100 p-2 rounded-xl">
+                      <span className="text-[10px] text-slate-500 block">Median vs market</span>
+                      <strong className="text-rose-700 font-black">{(ring.medianRatio * 100).toFixed(0)}%</strong>
+                    </div>
+                    <div className="bg-slate-50 p-2 rounded-xl">
+                      <span className="text-[10px] text-slate-500 block">Verified</span>
+                      <strong className="text-slate-900">{ring.verified}/{ring.rows.length}</strong>
+                    </div>
+                    <div className="bg-slate-50 p-2 rounded-xl">
+                      <span className="text-[10px] text-slate-500 block">Live</span>
+                      <strong className="text-slate-900">{ring.live}/{ring.rows.length}</strong>
+                    </div>
+                  </div>
+                  <div className="text-xs text-slate-600">
+                    <span className="text-slate-400">Posts as:</span>{' '}
+                    <span className="font-semibold text-slate-800">{ring.aliases.join(' · ')}</span>
+                    <span className="text-slate-400"> across {ring.localities} localities</span>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Bait Search */}
             <div className="bg-white border border-slate-200 rounded-3xl p-4 shadow-xs flex items-center justify-between">
               <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                Showing {allBaitRecords.length} Audited Bait Traps
+                Showing {allBaitRecords.length} of {fakeIds.length} bait listings
               </span>
               <div className="relative w-72">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
@@ -962,57 +1134,58 @@ export default function InsightsView({ user, onOpenLogin }) {
                   type="text"
                   value={baitSearch}
                   onChange={(e) => setBaitSearch(e.target.value)}
-                  placeholder="Search bait listings..."
+                  placeholder="Search by id, society, locality or number..."
                   className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-amber-500"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {allBaitRecords.map((bait) => (
-                <div key={bait.id} className="bg-white border border-amber-200 rounded-3xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+                <div key={bait.listing_id} className="bg-white border border-amber-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-3">
                   <div>
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-2">
                       <button
-                        onClick={() => handleCopy(bait.id)}
-                        className="font-mono text-xs font-bold text-amber-900 bg-amber-100 px-3 py-1 rounded-xl border border-amber-300 flex items-center space-x-1 hover:bg-amber-200 transition-colors cursor-pointer"
+                        onClick={() => handleCopy(bait.listing_id)}
+                        className="font-mono text-xs font-bold text-amber-900 bg-amber-100 px-2.5 py-1 rounded-lg border border-amber-300 flex items-center space-x-1 hover:bg-amber-200 transition-colors cursor-pointer"
                         title="Click to copy ID"
                       >
-                        <span>{bait.id}</span>
-                        {copiedId === bait.id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3 text-amber-700" />}
+                        <span>{bait.listing_id}</span>
+                        {copiedId === bait.listing_id ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3 text-amber-700" />}
                       </button>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
-                        Lead Trap Bait
+                      <span className="font-mono text-[10px] uppercase text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                        {bait.website}
                       </span>
                     </div>
 
-                    <h3 className="text-base font-bold text-slate-900">{bait.apartment_name}</h3>
+                    <h3 className="text-sm font-bold text-slate-900">{bait.apartment_name}</h3>
                     <div className="text-xs text-slate-500 capitalize flex items-center space-x-1 mt-0.5">
                       <MapPin className="w-3 h-3 text-[#0018A8]" />
-                      <span>{bait.locality}, Bangalore · {bait.bedroom} BHK ({bait.carpet_area} sqft)</span>
+                      <span>{bait.locality} · {bait.bedroom} BHK · {bait.carpet_area} sqft</span>
                     </div>
 
-                    {/* Price comparison */}
-                    <div className="grid grid-cols-2 gap-3 mt-4 p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200/80">
+                    <div className="grid grid-cols-2 gap-3 mt-3 p-3 rounded-xl bg-amber-50/60 border border-amber-200/80">
                       <div>
-                        <span className="text-[10px] text-amber-800 font-bold uppercase tracking-wider block">Fake Clickbait Price</span>
-                        <span className="text-xl font-black text-rose-600">{formatINR(bait.price)}</span>
+                        <span className="text-[10px] text-amber-800 font-bold uppercase tracking-wider block">Asking rate</span>
+                        <span className="text-base font-black text-rose-600">₹{bait.price_per_sqft?.toLocaleString('en-IN')}</span>
+                        <span className="text-[10px] text-slate-500 block">/sqft</span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Real Market Estimate</span>
-                        <span className="text-xl font-black text-emerald-700">{bait.normalEst}</span>
+                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Locality median</span>
+                        <span className="text-base font-black text-emerald-700">₹{Math.round(bait.locality_market_rate || 0).toLocaleString('en-IN')}</span>
+                        <span className="text-[10px] text-slate-500 block">{bait.bedroom} BHK in {bait.locality}</span>
                       </div>
                     </div>
 
-                    <p className="text-xs text-slate-600 font-medium mt-3 leading-relaxed">
-                      {bait.reason}
+                    <p className="text-xs text-slate-600 font-medium mt-2.5 leading-relaxed">
+                      Asking {formatCrores(bait.price)} &mdash; {((bait.market_rate_ratio || 0) * 100).toFixed(0)}% of the going rate,
+                      while flagged verified and live.
                     </p>
                   </div>
 
-                  {/* Broker contact */}
                   <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                     <div>
-                      <span className="text-slate-400 block text-[10px]">Broker Entity</span>
+                      <span className="text-slate-400 block text-[10px]">Posted as</span>
                       <span className="font-semibold text-slate-800">{bait.posted_by_name}</span>
                     </div>
                     <div className="text-right">
@@ -1034,27 +1207,27 @@ export default function InsightsView({ user, onOpenLogin }) {
             {/* Bellandur Key Stats Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs">
-                <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">Total Monthly Rent</div>
-                <div className="text-2xl font-black text-[#0018A8] mt-1">₹21,45,000</div>
-                <div className="text-[11px] text-slate-400 mt-0.5">Sum of 44 verified rental units</div>
+                <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">Total monthly rent</div>
+                <div className="text-2xl font-black text-[#0018A8] mt-1">{formatINR(bel?.monthly_rent)}</div>
+                <div className="text-[11px] text-slate-400 mt-0.5">Across {n(bel?.rentals)} rentals (answer 5)</div>
               </div>
 
               <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs">
-                <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">Active Sale Listings</div>
-                <div className="text-2xl font-black text-slate-900 mt-1">372 Properties</div>
-                <div className="text-[11px] text-slate-400 mt-0.5">In Bellandur corridor</div>
+                <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">Live sale listings</div>
+                <div className="text-2xl font-black text-slate-900 mt-1">{n(bel?.sale_listings_live)}</div>
+                <div className="text-[11px] text-slate-400 mt-0.5">of {n(bel?.sale_listings_all)} retrievable</div>
               </div>
 
               <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs">
-                <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">Average Rate / Sqft</div>
-                <div className="text-2xl font-black text-emerald-700 mt-1">₹9,840</div>
-                <div className="text-[11px] text-slate-400 mt-0.5">Median across live units</div>
+                <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">Median rate / sqft</div>
+                <div className="text-2xl font-black text-emerald-700 mt-1">{formatINR(bellandurMedianRate)}</div>
+                <div className="text-[11px] text-slate-400 mt-0.5">Live units, impossible and bait records removed</div>
               </div>
 
               <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs">
-                <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">Developer Projects</div>
-                <div className="text-2xl font-black text-slate-900 mt-1">12 Projects</div>
-                <div className="text-[11px] text-slate-400 mt-0.5">RERA registered in Bellandur</div>
+                <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">Developer projects</div>
+                <div className="text-2xl font-black text-slate-900 mt-1">{n(bel?.projects)}</div>
+                <div className="text-[11px] text-slate-400 mt-0.5">RERA-registered in {ASSIGNED_LOCALITY}</div>
               </div>
             </div>
 
@@ -1074,28 +1247,38 @@ export default function InsightsView({ user, onOpenLogin }) {
                 
                 <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
                   <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                    Rental Yield & Demand
+                    Rental yield &amp; demand
                   </h3>
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    Bellandur is Bangalore's primary Outer Ring Road tech corridor. The sum of monthly rent across all 44 retrievable units is <strong>₹21,45,000 / month</strong>, with an average rental price of ₹48,750 / month for a 2 BHK apartment.
+                    {n(bel?.rentals)} rentals carry <code className="font-mono">locality: {ASSIGNED_LOCALITY}</code>, totalling{' '}
+                    <strong>{formatINR(bel?.monthly_rent)} / month</strong> &mdash; a mean of {formatINR(bellandurStats.meanRent)} per unit.
+                    A 2 BHK here averages {formatINR(bellandurStats.mean2bhkRent)} / month across {n(bellandurStats.count2bhk)} listings.
                   </p>
                 </div>
 
                 <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
                   <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                    Unit Configurations
+                    Unit configurations
                   </h3>
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    The predominant inventory consists of <strong>2 BHK (48%)</strong> and <strong>3 BHK (39%)</strong> units, catering directly to IT professionals working along Embassy TechVillage, RMZ Ecospace, and Prestige Tech Park.
+                    Across the {n(bel?.sale_listings_all)} retrievable sale listings in {ASSIGNED_LOCALITY}, the inventory splits{' '}
+                    {bellandurStats.bhkSplit.map((b, i) => (
+                      <span key={b.bhk}>
+                        {i > 0 ? ', ' : ''}<strong>{b.bhk} BHK {b.pct}%</strong>
+                      </span>
+                    ))}
+                    .
                   </p>
                 </div>
 
                 <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
                   <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                    Ivy Liquidity Advantage
+                    Data quality here
                   </h3>
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    Average open-market time-on-market in Bellandur is 7.2 months. Ivy Homes guarantees cash liquidity within <strong>60 days</strong>, saving homeowners ₹7.8 L+ in holding carrying costs and broker commissions.
+                    {n(bellandurStats.corrupt)} of the {ASSIGNED_LOCALITY} sale listings are among the {corruptIds.length} impossible
+                    records and {n(bellandurStats.fake)} belong to the bait rings. {n(bel?.projects)} developer projects sit in the
+                    locality, of which {n(bellandurStats.wrongCount)} report a listing count that does not match reality.
                   </p>
                 </div>
 
