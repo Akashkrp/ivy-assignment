@@ -51,12 +51,17 @@ export default function App() {
   }, []);
 
   const handleToggleSave = async (listingId) => {
-    if (savedListings.includes(listingId)) {
+    const isAlreadySaved = savedListings.some(
+      (item) => (typeof item === 'string' ? item : (item.listing_id || item.id)) === listingId
+    );
+    if (isAlreadySaved) {
       await API.removeSavedListing(listingId);
-      setSavedListings(prev => prev.filter(id => id !== listingId));
+      setSavedListings((prev) =>
+        prev.filter((item) => (typeof item === 'string' ? item : (item.listing_id || item.id)) !== listingId)
+      );
     } else {
       await API.saveListing(listingId);
-      setSavedListings(prev => [...prev, listingId]);
+      setSavedListings((prev) => [...prev, listingId]);
     }
   };
 

@@ -253,7 +253,15 @@ export const API = {
     const token = await Auth.getValidToken();
     if (!token) {
       const local = localStorage.getItem(SAVED_CACHE_KEY);
-      return local ? JSON.parse(local) : [];
+      if (!local) return [];
+      try {
+        const parsed = JSON.parse(local);
+        return Array.isArray(parsed)
+          ? parsed.map(item => typeof item === 'string' ? item : (item.listing_id || item.id)).filter(Boolean)
+          : [];
+      } catch (e) {
+        return [];
+      }
     }
 
     try {
@@ -266,14 +274,23 @@ export const API = {
       if (res.ok) {
         const data = await res.json();
         const results = data.results || [];
-        localStorage.setItem(SAVED_CACHE_KEY, JSON.stringify(results));
-        return results;
+        const ids = results.map(item => typeof item === 'string' ? item : (item.listing_id || item.id)).filter(Boolean);
+        localStorage.setItem(SAVED_CACHE_KEY, JSON.stringify(ids));
+        return ids;
       }
     } catch (err) {
       console.warn('API getSaved error, using fallback:', err);
     }
     const local = localStorage.getItem(SAVED_CACHE_KEY);
-    return local ? JSON.parse(local) : [];
+    if (!local) return [];
+    try {
+      const parsed = JSON.parse(local);
+      return Array.isArray(parsed)
+        ? parsed.map(item => typeof item === 'string' ? item : (item.listing_id || item.id)).filter(Boolean)
+        : [];
+    } catch (e) {
+      return [];
+    }
   },
 
   async saveListing(listingId) {

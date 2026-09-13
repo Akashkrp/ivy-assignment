@@ -36,7 +36,10 @@ export default function FavouritesView({ user: propUser, onOpenLogin, savedListi
   }, []);
 
   const savedObjects = useMemo(() => {
-    return allListings.filter((l) => savedListings.includes(l.listing_id));
+    const idsSet = new Set(
+      savedListings.map((item) => (typeof item === 'string' ? item : (item.listing_id || item.id))).filter(Boolean)
+    );
+    return allListings.filter((l) => idsSet.has(l.listing_id));
   }, [allListings, savedListings]);
 
   return (
