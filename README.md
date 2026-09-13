@@ -16,7 +16,7 @@
 2. [Quick Start & Setup Instructions](#quick-start--setup-instructions)
 3. [Answers to the 10 Mandatory Questions](#answers-to-the-10-mandatory-questions)
 4. [Hypothesis Testing & Empirical Findings](#hypothesis-testing--empirical-findings)
-   - [What We Suspected & Proved (The 22 Documentation Lies)](#what-we-suspected--proved-the-22-documentation-lies)
+   - [What We Suspected & Proved (The 24 Documentation Lies)](#what-we-suspected--proved-the-24-documentation-lies)
    - [What We Checked That Turned Out To Be Perfectly Fine](#what-we-checked-that-turned-out-to-be-perfectly-fine)
 5. [Frontend Architecture & Key Features](#frontend-architecture--key-features)
 6. [3D Geospatial Audit & Micro-Market Map](#3d-geospatial-audit--micro-market-map)
@@ -32,7 +32,7 @@
 This project completes the Ivy Homes September 2026 Internship assignment, comprising:
 1. **Automated Ingestion Pipeline:** A Node.js engine that fetches the entire city dataset (`4,700` listings, `1,900` rentals, `520` projects) within rate limits and mirrors it to local SQLite (`data/ivy_homes.db`) and JSON files.
 2. **Rigorous Data Investigation:** Formulated mathematical proofs to solve the 10 city-specific questions in `statement.md` anchored to the exact reference moment.
-3. **Comprehensive Documentation Audit:** Discovered, reproduced, and evidenced **22 specific discrepancies ("lies")** between `API_REFERENCE.md` and actual server behavior.
+3. **Comprehensive Documentation Audit:** Discovered, reproduced, and evidenced **24 specific discrepancies ("lies")** between `API_REFERENCE.md` and actual server behavior.
 4. **Interactive Production Web App:** Built with React, Vite, and Tailwind CSS, featuring active demo session authentication with automatic 15-minute token refresh, resilient client-side filtering compensating for server filter flaws, property detail routes, favourites synchronization, and an interactive "Insights & Truth Explorer".
 
 ---
@@ -117,7 +117,7 @@ All calculations are anchored to `REFERENCE = 2026-09-10T00:00:00+05:30 (IST)` f
 
 ## Hypothesis Testing & Empirical Findings
 
-### What We Suspected & Proved (The 22 Documentation Lies)
+### What We Suspected & Proved (The 24 Documentation Lies)
 
 1. **API Key Authentication (`auth`):**
    - *Documented:* Append API key as query parameter `?api_key=...`.
@@ -185,6 +185,12 @@ All calculations are anchored to `REFERENCE = 2026-09-10T00:00:00+05:30 (IST)` f
 22. **Duplicate Properties (`duplicates`):**
     - *Documented:* Each listing corresponds to exactly one physical property.
     - *Actual:* 4,700 listings describe only 4,182 distinct physical properties due to portal duplicates.
+23. **Furnishing Filter on Listings Ignored (`filters`):**
+    - *Documented:* Listings support `furnishing` query parameter to filter by unfurnished, semi-furnished, fully-furnished.
+    - *Actual:* The parameter is accepted but silently ignored on `/v1/listings` — returns `total=4301` with all furnishing types regardless. The same filter works correctly on `/v1/rentals`.
+24. **Logout Does Not Invalidate Tokens (`auth`):**
+    - *Documented:* `POST /auth/logout` invalidates the current token server side.
+    - *Actual:* Returns `{"ok": true, "note": "tokens are stateless; discard them client side"}`. Tokens remain valid after logout until natural 15-minute expiry.
 
 ---
 
@@ -311,7 +317,7 @@ cp .env.example .env
 
 ## Submission File Structure (`submission.json`)
 
-The generated `submission.json` adheres strictly to `submission.template.json` with all 10 verified answers and 22 documented findings:
+The generated `submission.json` adheres strictly to `submission.template.json` with all 10 verified answers and 24 documented findings:
 ```json
 {
   "api_key": "IVY26-AD650B77XXXX",
@@ -333,7 +339,7 @@ The generated `submission.json` adheres strictly to `submission.template.json` w
     "fake_listing_ids": [ ... 8 IDs ... ],
     "projects_with_wrong_listing_count": 127
   },
-  "findings": [ ... 22 Discrepancies ... ]
+  "findings": [ ... 24 Discrepancies ... ]
 }
 ```
 

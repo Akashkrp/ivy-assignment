@@ -287,6 +287,24 @@ const findings = [
     how_found: "Deduplicated records using composite key of apartment name, locality, floor, total floors, bedroom count, and facing direction.",
     impact: "Buyers encounter duplicate listings of identical properties across different brokers and portals.",
     evidence: ["DWE-1004037", "ZER-1003310", "100-1002951", "MAG-1003368", "SQU-1003074", "ZER-1002378"]
+  },
+  {
+    endpoint: "/v1/listings",
+    category: "filters",
+    documented: "Supports furnishing query parameter with values unfurnished, semi-furnished, fully-furnished.",
+    actual: "The furnishing filter parameter is accepted but silently ignored on /v1/listings — returns total=4301 regardless, with all furnishing types in results. Notably, the same furnishing filter works correctly on /v1/rentals (e.g., furnishing=unfurnished returns total=570 with correct results).",
+    how_found: "Queried /v1/listings?furnishing=semi-furnished and received total=4301 with fully-furnished results; confirmed /v1/rentals?furnishing=unfurnished returns correctly filtered total=570.",
+    impact: "Furnishing filtering on listings must be performed client-side.",
+    evidence: []
+  },
+  {
+    endpoint: "/auth/logout",
+    category: "auth",
+    documented: "POST /auth/logout invalidates the current token server side.",
+    actual: "Returns 200 with body {\"ok\": true, \"note\": \"tokens are stateless; discard them client side\"}. Tokens are NOT invalidated server-side; they remain valid until natural expiry.",
+    how_found: "Called POST /auth/logout and inspected the response body which explicitly states tokens are stateless.",
+    impact: "Security: tokens remain usable after 'logout'. Client must discard tokens manually and rely on 15-minute expiry for session termination.",
+    evidence: []
   }
 ];
 
