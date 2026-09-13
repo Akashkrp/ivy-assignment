@@ -466,11 +466,11 @@ export default function InsightsView({ user, onOpenLogin }) {
                 className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
               >
                 <div>
-                  <div className="inline-block px-2.5 py-0.5 rounded-md bg-[#EBEDFF] text-[#0018A8] text-[10px] font-black uppercase tracking-wider mb-2.5">
+                  <div className="inline-block px-2.5 py-1 rounded-md bg-[#EBEDFF] text-[#0018A8] text-xs font-black uppercase tracking-wider mb-3">
                     QUESTION {q.num}
                   </div>
 
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-1.5 leading-snug">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-2 leading-snug">
                     {q.title}
                   </h3>
 
@@ -478,17 +478,17 @@ export default function InsightsView({ user, onOpenLogin }) {
                     {q.answer}
                   </div>
 
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4">
+                  <p className="text-sm sm:text-[15px] text-slate-600 leading-relaxed mb-4">
                     {q.summary}
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-slate-100 bg-slate-50/60 -mx-6 -mb-6 p-5 rounded-b-3xl mt-2">
-                  <div className="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1 flex items-center space-x-1">
-                    <Sparkles className="w-3.5 h-3.5 text-[#0018A8]" />
+                <div className="pt-4 border-t border-slate-200/80 bg-slate-50/90 -mx-6 -mb-6 p-5 sm:p-6 rounded-b-3xl mt-3">
+                  <div className="text-xs font-bold text-[#0018A8] uppercase tracking-wider mb-2 flex items-center space-x-1.5">
+                    <Sparkles className="w-4 h-4 text-[#0018A8]" />
                     <span>DETECTIVE METHODOLOGY:</span>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                  <p className="text-sm sm:text-[14.5px] text-slate-700 leading-relaxed font-normal">
                     {q.methodology}
                   </p>
                 </div>
@@ -753,22 +753,22 @@ export default function InsightsView({ user, onOpenLogin }) {
                       
                       {/* Documented Claim */}
                       <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80">
-                        <div className="text-[11px] font-bold text-amber-800 uppercase tracking-wider mb-1 flex items-center space-x-1.5">
-                          <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                        <div className="text-xs font-bold text-amber-800 uppercase tracking-wider mb-1.5 flex items-center space-x-1.5">
+                          <AlertTriangle className="w-4 h-4 text-amber-600" />
                           <span>Documented Claim (The Discrepancy)</span>
                         </div>
-                        <p className="text-xs text-slate-800 leading-relaxed font-mono font-medium">
+                        <p className="text-sm text-slate-800 leading-relaxed font-mono font-medium">
                           "{f.documented}"
                         </p>
                       </div>
 
                       {/* Actual Behavior */}
                       <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
-                        <div className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider mb-1 flex items-center space-x-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <div className="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-1.5 flex items-center space-x-1.5">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                           <span>Actual API Behavior (The Verified Truth)</span>
                         </div>
-                        <p className="text-xs text-emerald-950 leading-relaxed font-mono font-medium">
+                        <p className="text-sm text-emerald-950 leading-relaxed font-mono font-medium">
                           "{f.actual}"
                         </p>
                       </div>
@@ -776,14 +776,14 @@ export default function InsightsView({ user, onOpenLogin }) {
                     </div>
 
                     {/* Details: How Found & Impact */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-700 pt-3 border-t border-slate-100">
                       <div>
-                        <strong className="text-slate-900">How Discovered: </strong>
-                        {f.how_found}
+                        <strong className="text-slate-900 font-bold">How Discovered: </strong>
+                        <span>{f.how_found}</span>
                       </div>
                       <div>
-                        <strong className="text-slate-900">Client Impact: </strong>
-                        {f.impact}
+                        <strong className="text-slate-900 font-bold">Client Impact: </strong>
+                        <span>{f.impact}</span>
                       </div>
                     </div>
 

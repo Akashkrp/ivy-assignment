@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
-export default function ThreeLoginScene({ mousePos }) {
+export default function ThreeLoginScene() {
   const mountRef = useRef(null);
 
   useEffect(() => {
@@ -14,189 +14,213 @@ export default function ThreeLoginScene({ mousePos }) {
 
     // Scene, Camera, Renderer
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x020617, 0.035);
+    scene.background = new THREE.Color(0x04091a); // Deep Ivy Twilight Navy
+    scene.fog = new THREE.FogExp2(0x04091a, 0.024);
 
-    const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
-    camera.position.set(0, 4, 18);
+    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+    camera.position.set(0, 5, 22);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
+    renderer.toneMappingExposure = 1.15;
     currentMount.appendChild(renderer.domElement);
 
-    // Group for all rotating elements
+    // Group for all elements
     const worldGroup = new THREE.Group();
     scene.add(worldGroup);
 
-    // 1. Futuristic 3D Cyber City Skyscrapers (Architectural wireframes + glossy bodies)
+    // 1. Modern Architectural Residences & Towers (Ivy Homes Real Estate Theme)
     const buildingsGroup = new THREE.Group();
-    const buildingCount = 45;
+    const buildingCount = 38;
     const buildingGeometries = [];
     const buildingMaterials = [];
 
-    const cityGridSize = 30;
+    const citySpread = 32;
     for (let i = 0; i < buildingCount; i++) {
-      const bWidth = 0.8 + Math.random() * 1.4;
-      const bDepth = 0.8 + Math.random() * 1.4;
-      const bHeight = 2.5 + Math.random() * 9;
+      const bWidth = 1.0 + Math.random() * 1.6;
+      const bDepth = 1.0 + Math.random() * 1.6;
+      const bHeight = 3.0 + Math.random() * 8.5;
 
-      const posX = (Math.random() - 0.5) * cityGridSize;
-      const posZ = (Math.random() - 0.5) * cityGridSize;
+      const angle = (i / buildingCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+      const dist = 7.5 + Math.random() * (citySpread / 2);
 
-      // Keep center somewhat open for the modal
-      if (Math.abs(posX) < 3.5 && Math.abs(posZ) < 3.5) continue;
+      const posX = Math.cos(angle) * dist;
+      const posZ = Math.sin(angle) * dist;
 
       const geom = new THREE.BoxGeometry(bWidth, bHeight, bDepth);
       buildingGeometries.push(geom);
 
-      // Glassy solid body
-      const mat = new THREE.MeshPhysicalMaterial({
-        color: 0x061e2b,
-        emissive: 0x022c22,
-        emissiveIntensity: 0.35,
-        roughness: 0.2,
-        metalness: 0.8,
+      // Deep Ivy Navy & Cobalt architectural body
+      const isWarmAccent = Math.random() > 0.65;
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x091533,
+        emissive: isWarmAccent ? 0x1e3a8a : 0x0a1936,
+        emissiveIntensity: 0.4,
+        roughness: 0.35,
+        metalness: 0.65,
         transparent: true,
-        opacity: 0.75,
+        opacity: 0.92,
       });
       buildingMaterials.push(mat);
 
       const building = new THREE.Mesh(geom, mat);
-      building.position.set(posX, bHeight / 2 - 2, posZ);
+      building.position.set(posX, bHeight / 2 - 2.5, posZ);
       buildingsGroup.add(building);
 
-      // Glowing edges / wireframe outlines
+      // Crisp architectural outline edges in Ivy Royal Blue & Sky Cyan
       const wireGeom = new THREE.EdgesGeometry(geom);
       const wireMat = new THREE.LineBasicMaterial({
-        color: Math.random() > 0.4 ? 0x10b981 : 0x06b6d4,
+        color: isWarmAccent ? 0x38bdf8 : 0x1d4ed8,
         transparent: true,
-        opacity: 0.65,
+        opacity: 0.75,
       });
       const wireframe = new THREE.LineSegments(wireGeom, wireMat);
       wireframe.position.copy(building.position);
       buildingsGroup.add(wireframe);
+
+      // Glowing interior window blocks (warm residential amber & cyan lights)
+      const windowCount = Math.floor(bHeight / 1.8);
+      for (let w = 1; w <= windowCount; w++) {
+        const winGeom = new THREE.BoxGeometry(bWidth * 0.85, 0.45, bDepth * 0.85);
+        const isAmber = (i + w) % 3 === 0;
+        const winMat = new THREE.MeshBasicMaterial({
+          color: isAmber ? 0xf59e0b : 0x38bdf8,
+          transparent: true,
+          opacity: 0.45 + Math.random() * 0.35,
+        });
+        const winMesh = new THREE.Mesh(winGeom, winMat);
+        winMesh.position.set(
+          posX,
+          building.position.y - bHeight / 2 + w * 1.5,
+          posZ
+        );
+        buildingsGroup.add(winMesh);
+        buildingGeometries.push(winGeom);
+        buildingMaterials.push(winMat);
+      }
     }
     worldGroup.add(buildingsGroup);
 
-    // 2. Undulating Cyber Floor Grid
-    const gridHelper = new THREE.GridHelper(50, 40, 0x10b981, 0x0f343a);
-    gridHelper.position.y = -2;
-    worldGroup.add(gridHelper);
+    // 2. Smooth Topographic Real Estate Contour Terrain (Bangalore hills / lake basin)
+    const terrainGeo = new THREE.PlaneGeometry(65, 65, 34, 34);
+    terrainGeo.rotateX(-Math.PI / 2);
+    const posAttr = terrainGeo.attributes.position;
+    const baseHeights = new Float32Array(posAttr.count);
 
-    // 3. Floating Holographic Polyhedra (Crystalline Real Estate Nodes)
-    const polyhedra = [];
-    const polyGroup = new THREE.Group();
-
-    const shapes = [
-      new THREE.IcosahedronGeometry(1.4, 0),
-      new THREE.OctahedronGeometry(1.6, 0),
-      new THREE.DodecahedronGeometry(1.2, 0),
-      new THREE.TetrahedronGeometry(1.5, 0),
-    ];
-
-    for (let i = 0; i < 7; i++) {
-      const geom = shapes[i % shapes.length];
-      const mat = new THREE.MeshStandardMaterial({
-        color: i % 2 === 0 ? 0x10b981 : 0x06b6d4,
-        wireframe: true,
-        emissive: i % 2 === 0 ? 0x059669 : 0x0891b2,
-        emissiveIntensity: 0.8,
-      });
-      const mesh = new THREE.Mesh(geom, mat);
-      const angle = (i / 7) * Math.PI * 2;
-      const radius = 9 + Math.random() * 4;
-      mesh.position.set(
-        Math.cos(angle) * radius,
-        1 + Math.sin(angle * 2) * 3,
-        Math.sin(angle) * radius
-      );
-      mesh.userData = {
-        rotSpeedX: (Math.random() - 0.5) * 0.02,
-        rotSpeedY: (Math.random() - 0.5) * 0.02,
-        floatSpeed: 0.8 + Math.random() * 0.6,
-        originalY: mesh.position.y,
-        seed: Math.random() * 100,
-      };
-      polyhedra.push(mesh);
-      polyGroup.add(mesh);
+    for (let i = 0; i < posAttr.count; i++) {
+      const x = posAttr.getX(i);
+      const z = posAttr.getZ(i);
+      const dist = Math.sqrt(x * x + z * z);
+      let y = Math.sin(x * 0.12) * Math.cos(z * 0.12) * 2.2 + Math.sin(dist * 0.08) * 1.5;
+      if (dist < 8) y = -0.8; // Center basin for clear readability
+      posAttr.setY(i, y - 2.5);
+      baseHeights[i] = y - 2.5;
     }
-    worldGroup.add(polyGroup);
+    terrainGeo.computeVertexNormals();
 
-    // 4. Floating Nebula / Constellation Particles
-    const particleCount = 700;
+    const terrainMat = new THREE.MeshStandardMaterial({
+      color: 0x060f26,
+      roughness: 0.85,
+      metalness: 0.2,
+      flatShading: true,
+    });
+    const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
+    worldGroup.add(terrainMesh);
+
+    // Architectural contour wireframe overlay
+    const terrainWireMat = new THREE.MeshBasicMaterial({
+      color: 0x1e3a8a,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.35,
+    });
+    const terrainWireMesh = new THREE.Mesh(terrainGeo, terrainWireMat);
+    terrainWireMesh.position.y = 0.02;
+    worldGroup.add(terrainWireMesh);
+
+    // Concentric Central Architectural Rings (Bellandur Water / Locality Center)
+    [10, 16, 23].forEach((radius, idx) => {
+      const ringGeo = new THREE.RingGeometry(radius - 0.12, radius + 0.12, 64);
+      ringGeo.rotateX(-Math.PI / 2);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: idx === 0 ? 0x00f0ff : 0x1d4ed8,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.45 - idx * 0.1,
+      });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.position.y = -2.4 + idx * 0.05;
+      worldGroup.add(ring);
+    });
+
+    // 3. Floating Amber & Cyan Starlight Particles (Evening City Ambience)
+    const particleCount = 450;
     const particleGeom = new THREE.BufferGeometry();
     const posArray = new Float32Array(particleCount * 3);
     const colorArray = new Float32Array(particleCount * 3);
 
     for (let i = 0; i < particleCount * 3; i += 3) {
-      posArray[i] = (Math.random() - 0.5) * 45;
-      posArray[i + 1] = (Math.random() - 0.5) * 30 + 3;
-      posArray[i + 2] = (Math.random() - 0.5) * 45;
+      posArray[i] = (Math.random() - 0.5) * 55;
+      posArray[i + 1] = (Math.random() - 0.5) * 25 + 4;
+      posArray[i + 2] = (Math.random() - 0.5) * 55;
 
-      const isEmerald = Math.random() > 0.4;
-      colorArray[i] = isEmerald ? 0.06 : 0.02;     // R
-      colorArray[i + 1] = isEmerald ? 0.72 : 0.71; // G
-      colorArray[i + 2] = isEmerald ? 0.51 : 0.83; // B
+      const isAmber = Math.random() > 0.65;
+      if (isAmber) {
+        colorArray[i] = 0.98;     // Warm Gold R
+        colorArray[i + 1] = 0.75; // G
+        colorArray[i + 2] = 0.22; // B
+      } else {
+        colorArray[i] = 0.22;     // Ivy Cyan R
+        colorArray[i + 1] = 0.74; // G
+        colorArray[i + 2] = 0.97; // B
+      }
     }
 
     particleGeom.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
     particleGeom.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
 
     const particleMat = new THREE.PointsMaterial({
-      size: 0.16,
+      size: 0.18,
       vertexColors: true,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.75,
       blending: THREE.AdditiveBlending,
     });
     const particles = new THREE.Points(particleGeom, particleMat);
     worldGroup.add(particles);
 
-    // 5. Lighting
-    const ambientLight = new THREE.AmbientLight(0x0a192f, 2.5);
+    // 4. Lighting Matching Ivy Theme
+    const ambientLight = new THREE.AmbientLight(0x0e1e47, 2.2);
     scene.add(ambientLight);
 
-    const emeraldLight = new THREE.PointLight(0x10b981, 6, 30);
-    emeraldLight.position.set(5, 6, 5);
-    scene.add(emeraldLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.8);
+    dirLight.position.set(25, 40, 20);
+    scene.add(dirLight);
 
-    const cyanLight = new THREE.PointLight(0x06b6d4, 5, 30);
-    cyanLight.position.set(-6, 4, -4);
-    scene.add(cyanLight);
+    const ivyBlueLight = new THREE.PointLight(0x0018a8, 6, 45);
+    ivyBlueLight.position.set(0, 8, 0);
+    scene.add(ivyBlueLight);
 
-    const purpleLight = new THREE.PointLight(0xa855f7, 4, 35);
-    purpleLight.position.set(0, 10, -8);
-    scene.add(purpleLight);
+    const warmSunsetLight = new THREE.PointLight(0xf59e0b, 4.5, 40);
+    warmSunsetLight.position.set(-15, 6, -15);
+    scene.add(warmSunsetLight);
 
-    // Mouse coordinates interpolation
-    let mouseX = 0;
-    let mouseY = 0;
-    let targetCameraX = 0;
-    let targetCameraY = 4;
+    // 5. Resize Observer for Rock-Solid Responsiveness
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const { width: newW, height: newH } = entry.contentRect;
+        if (newW > 0 && newH > 0) {
+          camera.aspect = newW / newH;
+          camera.updateProjectionMatrix();
+          renderer.setSize(newW, newH);
+        }
+      }
+    });
+    resizeObserver.observe(currentMount);
 
-    const handleMouseMove = (e) => {
-      const normalizedX = (e.clientX / window.innerWidth) * 2 - 1;
-      const normalizedY = -(e.clientY / window.innerHeight) * 2 + 1;
-      mouseX = normalizedX;
-      mouseY = normalizedY;
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-
-    // Resize Handler
-    const handleResize = () => {
-      if (!currentMount) return;
-      const w = currentMount.clientWidth || window.innerWidth;
-      const h = currentMount.clientHeight || window.innerHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    };
-    window.addEventListener('resize', handleResize);
-
-    // Animation Loop
+    // 6. Smooth Cinematic Camera Animation Loop (Independent of mouse hover)
     let animationFrameId;
     let clock = new THREE.Clock();
 
@@ -204,33 +228,19 @@ export default function ThreeLoginScene({ mousePos }) {
       animationFrameId = requestAnimationFrame(animate);
       const elapsedTime = clock.getElapsedTime();
 
-      // Smooth camera parallax following mouse
-      targetCameraX = mouseX * 5;
-      targetCameraY = 4 + mouseY * 2.5;
-      camera.position.x += (targetCameraX - camera.position.x) * 0.04;
-      camera.position.y += (targetCameraY - camera.position.y) * 0.04;
+      // Smooth majestic orbital pan around architectural skyline
+      const cameraRadius = 24;
+      const orbitSpeed = 0.07;
+      camera.position.x = Math.sin(elapsedTime * orbitSpeed) * cameraRadius;
+      camera.position.z = Math.cos(elapsedTime * orbitSpeed) * cameraRadius;
+      camera.position.y = 4.8 + Math.sin(elapsedTime * 0.1) * 1.2;
       camera.lookAt(0, 1.5, 0);
 
-      // Rotate city world slowly
-      worldGroup.rotation.y = elapsedTime * 0.08 + mouseX * 0.2;
+      // Subtle slow world rotation
+      worldGroup.rotation.y = elapsedTime * 0.02;
 
-      // Polyhedra animation
-      polyhedra.forEach((mesh) => {
-        mesh.rotation.x += mesh.userData.rotSpeedX;
-        mesh.rotation.y += mesh.userData.rotSpeedY;
-        mesh.position.y =
-          mesh.userData.originalY +
-          Math.sin(elapsedTime * mesh.userData.floatSpeed + mesh.userData.seed) * 0.8;
-      });
-
-      // Move lights dynamically
-      emeraldLight.position.x = Math.sin(elapsedTime * 0.7) * 9;
-      emeraldLight.position.z = Math.cos(elapsedTime * 0.7) * 9;
-      cyanLight.position.x = -Math.cos(elapsedTime * 0.5) * 8;
-      cyanLight.position.z = -Math.sin(elapsedTime * 0.5) * 8;
-
-      // Particle subtle rotation
-      particles.rotation.y = elapsedTime * 0.02;
+      // Gentle floating particles drift
+      particles.rotation.y = elapsedTime * 0.015;
 
       renderer.render(scene, camera);
     };
@@ -240,16 +250,17 @@ export default function ThreeLoginScene({ mousePos }) {
     // Cleanup
     return () => {
       cancelAnimationFrame(animationFrameId);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
 
       if (currentMount && renderer.domElement) {
         currentMount.removeChild(renderer.domElement);
       }
 
-      // Dispose Three resources
       particleGeom.dispose();
       particleMat.dispose();
+      terrainGeo.dispose();
+      terrainMat.dispose();
+      terrainWireMat.dispose();
       buildingGeometries.forEach((g) => g.dispose());
       buildingMaterials.forEach((m) => m.dispose());
       renderer.dispose();
