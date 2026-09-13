@@ -1,7 +1,11 @@
 // Ivy Homes API Client & Data Normalizer Service
 const BASE_URL = 'https://solve.ivy.homes';
 
-// Read from environment variables with base64 decoded fallback
+// Credentials come from .env (which is gitignored). These fallbacks keep the
+// deployed demo working when the host has no env vars set. They are base64 only
+// to keep them out of a plain-text grep of the bundle - that is not security,
+// and it is not pretending to be: any browser client that calls this API has to
+// ship the key, and the assignment publishes it in submission.json anyway.
 const FALLBACK_KEY = typeof atob !== 'undefined' ? atob('SVZZMjYtQUQ2NTBCNzc5MzA0') : '';
 const FALLBACK_PWD = typeof atob !== 'undefined' ? atob('YzQyZDEwYWQ3Yg==') : '';
 
@@ -22,13 +26,17 @@ const TOKEN_KEY = 'ivy_access_token';
 const REFRESH_KEY = 'ivy_refresh_token';
 const USER_KEY = 'ivy_user';
 const EXPIRES_AT_KEY = 'ivy_token_expires_at';
-const SAVED_CACHE_KEY = 'ivy_saved_listings_cache';
+
+// Saved listings are per user, so the offline mirror has to be too - otherwise
+// signing in as demo2 briefly shows demo1's list.
+const savedCacheKey = (email) => `ivy_saved_listings_cache::${email || 'anonymous'}`;
 
 // In-memory cached full datasets for instantaneous browsing & resilient filtering
 let cachedListings = null;
 let cachedRentals = null;
 let cachedProjects = null;
 let cachedSubmission = null;
+let cachedDerived = null;
 
 export const Auth = {
   getToken() {
@@ -134,34 +142,150 @@ if (typeof window !== 'undefined') {
   }, 60000); // Check every 1 minute
 }
 
-// Data Normalization Utilities
+// ---------------------------------------------------------------------------
+// Data normalization
+//
+// The same derivations that scripts/generate_submission.mjs runs offline, so
+// what the screens show and what submission.json claims cannot drift apart.
+// ---------------------------------------------------------------------------
+
+export const REFERENCE_IST = '2026-09-10T00:00:00';
+const SQM_TO_SQFT = 10.7639;
+
+// magichomes reports area in square metres for some of its rows. The two
+// populations do not overlap: nothing from another portal is below 321 sqft and
+// no square-metre row is above 264.
+export const isSqMetres = (l) => l.website === 'magichomes' && l.carpet_area < 300;
+
+// Eight rows carry price in thousands of rupees - the only eight prices in the
+// dataset that are not a multiple of 10,000.
+export const isPriceInThousands = (l) => l.price > 0 && l.price < 50000;
+
+// Six things a listing can claim that cannot be true, plus the thousands-scaled
+// price, which as served describes a flat selling for six thousand rupees.
+// Plots legitimately carry zero bedrooms, bathrooms and floors.
+export const IMPOSSIBLE = {
+  negative_price: {
+    label: 'Negative sale price',
+    test: (l) => l.price < 0,
+    describe: (l) => `Sale price is negative (${formatINR(l.price)}).`
+  },
+  price_in_thousands: {
+    label: 'Price in thousands of rupees',
+    test: isPriceInThousands,
+    describe: (l) => `Price is ${formatINR(l.price)} for a ${l.bedroom} BHK - the value is in thousands, not rupees (${formatINR(l.price * 1000)}).`
+  },
+  carpet_exceeds_super_builtup: {
+    label: 'Carpet area exceeds super built-up',
+    test: (l) => l.carpet_area > l.super_built_up_area,
+    describe: (l) => `Carpet area (${l.carpet_area}) is larger than super built-up area (${l.super_built_up_area}).`
+  },
+  floor_exceeds_total_floors: {
+    label: 'Floor above the top of the building',
+    test: (l) => l.floor > l.total_floors,
+    describe: (l) => `On floor ${l.floor} of a ${l.total_floors}-floor building.`
+  },
+  swapped_coordinates: {
+    label: 'Latitude and longitude transposed',
+    test: (l) => l.latitude > 50,
+    describe: (l) => `Coordinates (${l.latitude}, ${l.longitude}) are transposed - as given the flat sits above the 50th parallel.`
+  },
+  zero_bedroom_and_bathroom: {
+    label: 'Zero bedrooms and bathrooms',
+    test: (l) => l.bedroom === 0 && l.bathroom === 0 && l.property_type !== 'plot',
+    describe: (l) => `A ${l.property_type} with 0 bedrooms and 0 bathrooms.`
+  },
+  posted_in_the_future: {
+    label: 'Posted in the future',
+    test: (l) => l.posted_at >= REFERENCE_IST,
+    describe: (l) => `Posted ${String(l.posted_at).slice(0, 10)}, after the reference moment.`
+  }
+};
+
 export function normalizeListing(l) {
-  // Check if carpet_area is reported in square meters (< 300) on magichomes
-  const isSqMeters = l.website === 'magichomes' && l.carpet_area < 300;
-  const carpetAreaSqft = isSqMeters ? Math.round(l.carpet_area * 10.7639) : l.carpet_area;
+  const converted = isSqMetres(l);
+  const carpetAreaSqft = converted ? Math.round(l.carpet_area * SQM_TO_SQFT) : l.carpet_area;
+  const superBuiltUpSqft = converted ? Math.round(l.super_built_up_area * SQM_TO_SQFT) : l.super_built_up_area;
 
-  // Anomaly checks
-  const isNegativePrice = l.price < 0;
-  const isFakePrice = l.price > 0 && l.price < 50000;
-  const isFloorAnomaly = l.total_floors > 0 && l.floor > l.total_floors;
-  const isAreaAnomaly = l.carpet_area > l.super_built_up_area;
-  const isCoordsAnomaly = l.latitude > 50 && l.longitude < 20;
-  const isZeroBhkAnomaly = l.bedroom <= 0 && l.property_type !== 'plot';
-  const isFutureDate = l.posted_at > '2026-09-10T00:00:00';
+  const defects = Object.entries(IMPOSSIBLE)
+    .filter(([, d]) => d.test(l))
+    .map(([key, d]) => ({ key, label: d.label, detail: d.describe(l) }));
 
-  const isCorrupt = isNegativePrice || isFloorAnomaly || isAreaAnomaly || isCoordsAnomaly || isZeroBhkAnomaly;
-  const isFake = isFakePrice;
+  // Price as it would read once the unit error is undone. Used for rate maths
+  // and shown alongside the served value, never silently in place of it.
+  const priceInr = isPriceInThousands(l) ? l.price * 1000 : l.price;
 
   return {
     ...l,
     raw_carpet_area: l.carpet_area,
+    raw_super_built_up_area: l.super_built_up_area,
     carpet_area: carpetAreaSqft,
-    is_area_converted: isSqMeters,
-    is_corrupt: isCorrupt,
-    is_fake: isFake,
-    is_future_dated: isFutureDate,
-    price_per_sqft: (carpetAreaSqft > 0 && l.price > 0) ? Math.round(l.price / carpetAreaSqft) : null
+    super_built_up_area: superBuiltUpSqft,
+    is_area_converted: converted,
+    price_inr: priceInr,
+    defects,
+    defect_keys: defects.map((d) => d.key),
+    is_corrupt: defects.length > 0,
+    is_future_dated: l.posted_at >= REFERENCE_IST,
+    is_fake: false, // filled in by annotateListings, which needs the whole set
+    price_per_sqft: carpetAreaSqft > 0 && priceInr > 0 ? Math.round(priceInr / carpetAreaSqft) : null
   };
+}
+
+/**
+ * Second pass over the whole collection: the enquiry-bait rings.
+ *
+ * A single phone number posting under several seller names is what stands out
+ * first - twelve numbers do it, nobody else does. Five of those twelve price at
+ * market with ordinary verified and live rates and are just busy agencies. The
+ * other seven price at roughly half the going rate for the same locality and
+ * bedroom count and have every single listing flagged verified and live, which
+ * at base rates of 60% and 79% does not happen by chance over 24 listings.
+ */
+export function annotateListings(rows) {
+  const marketRate = new Map();
+  const buckets = new Map();
+  for (const l of rows) {
+    if (l.is_corrupt || l.property_type === 'plot') continue;
+    const k = `${l.locality}|${l.bedroom}`;
+    if (!buckets.has(k)) buckets.set(k, []);
+    buckets.get(k).push(l.price_per_sqft);
+  }
+  for (const [k, v] of buckets) {
+    v.sort((a, b) => a - b);
+    marketRate.set(k, v[Math.floor(v.length / 2)]);
+  }
+
+  const byPhone = new Map();
+  for (const l of rows) {
+    if (!byPhone.has(l.posted_by_contact)) byPhone.set(l.posted_by_contact, []);
+    byPhone.get(l.posted_by_contact).push(l);
+  }
+
+  const baitPhones = new Set();
+  const multiNamePhones = new Set();
+  for (const [phone, group] of byPhone) {
+    if (new Set(group.map((r) => r.posted_by_name)).size < 2) continue;
+    multiNamePhones.add(phone);
+    if (!group.every((r) => r.is_verified) || !group.every((r) => r.is_live)) continue;
+    const ratios = group
+      .filter((r) => !r.is_corrupt && r.property_type !== 'plot')
+      .map((r) => r.price_per_sqft / marketRate.get(`${r.locality}|${r.bedroom}`))
+      .filter((v) => Number.isFinite(v))
+      .sort((a, b) => a - b);
+    if (ratios.length && ratios[Math.floor(ratios.length / 2)] < 0.75) baitPhones.add(phone);
+  }
+
+  for (const l of rows) {
+    const rate = marketRate.get(`${l.locality}|${l.bedroom}`);
+    l.market_rate_ratio = rate ? l.price_per_sqft / rate : null;
+    l.locality_market_rate = rate || null;
+    l.is_fake = baitPhones.has(l.posted_by_contact);
+    l.shares_contact_number = multiNamePhones.has(l.posted_by_contact);
+  }
+  rows.baitPhones = [...baitPhones].sort();
+  rows.multiNamePhones = [...multiNamePhones].sort();
+  return rows;
 }
 
 export function normalizeProject(p) {
@@ -202,11 +326,23 @@ export const API = {
     try {
       const res = await fetch('/data/listings.json');
       const data = await res.json();
-      cachedListings = data.map(normalizeListing);
+      cachedListings = annotateListings(data.map(normalizeListing));
       return cachedListings;
     } catch (e) {
       console.error('Failed to load listings cache:', e);
       return [];
+    }
+  },
+
+  async fetchDerived() {
+    if (cachedDerived) return cachedDerived;
+    try {
+      const res = await fetch('/data/derived.json');
+      cachedDerived = await res.json();
+      return cachedDerived;
+    } catch (e) {
+      console.error('Failed to load derived.json:', e);
+      return null;
     }
   },
 
@@ -248,21 +384,31 @@ export const API = {
     }
   },
 
-  // Saved Listings operations
+  // Saved Listings operations.
+  //
+  // The server is the record of truth - /v1/saved, per user, and it survives a
+  // re-login. localStorage only mirrors it so the heart icons are right on the
+  // first paint and the list still renders if the network blinks.
+  readSavedCache() {
+    const raw = localStorage.getItem(savedCacheKey(Auth.getUser()?.email));
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed)
+        ? parsed.map(item => typeof item === 'string' ? item : (item.listing_id || item.id)).filter(Boolean)
+        : [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  writeSavedCache(ids) {
+    localStorage.setItem(savedCacheKey(Auth.getUser()?.email), JSON.stringify(ids));
+  },
+
   async getSavedListings() {
     const token = await Auth.getValidToken();
-    if (!token) {
-      const local = localStorage.getItem(SAVED_CACHE_KEY);
-      if (!local) return [];
-      try {
-        const parsed = JSON.parse(local);
-        return Array.isArray(parsed)
-          ? parsed.map(item => typeof item === 'string' ? item : (item.listing_id || item.id)).filter(Boolean)
-          : [];
-      } catch (e) {
-        return [];
-      }
-    }
+    if (!token) return this.readSavedCache();
 
     try {
       const res = await fetch(`${BASE_URL}/v1/saved`, {
@@ -275,22 +421,13 @@ export const API = {
         const data = await res.json();
         const results = data.results || [];
         const ids = results.map(item => typeof item === 'string' ? item : (item.listing_id || item.id)).filter(Boolean);
-        localStorage.setItem(SAVED_CACHE_KEY, JSON.stringify(ids));
+        this.writeSavedCache(ids);
         return ids;
       }
     } catch (err) {
       console.warn('API getSaved error, using fallback:', err);
     }
-    const local = localStorage.getItem(SAVED_CACHE_KEY);
-    if (!local) return [];
-    try {
-      const parsed = JSON.parse(local);
-      return Array.isArray(parsed)
-        ? parsed.map(item => typeof item === 'string' ? item : (item.listing_id || item.id)).filter(Boolean)
-        : [];
-    } catch (e) {
-      return [];
-    }
+    return this.readSavedCache();
   },
 
   async saveListing(listingId) {
@@ -298,8 +435,7 @@ export const API = {
     // Update local cache first
     const current = await this.getSavedListings();
     if (!current.includes(listingId)) {
-      const updated = [...current, listingId];
-      localStorage.setItem(SAVED_CACHE_KEY, JSON.stringify(updated));
+      this.writeSavedCache([...current, listingId]);
     }
 
     if (token) {
@@ -323,8 +459,7 @@ export const API = {
   async removeSavedListing(listingId) {
     const token = await Auth.getValidToken();
     const current = await this.getSavedListings();
-    const updated = current.filter(id => id !== listingId);
-    localStorage.setItem(SAVED_CACHE_KEY, JSON.stringify(updated));
+    this.writeSavedCache(current.filter(id => id !== listingId));
 
     if (token) {
       try {
