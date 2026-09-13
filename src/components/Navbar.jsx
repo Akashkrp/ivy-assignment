@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Building2, Home, KeyRound, Heart, BarChart3, 
-  LogOut, UserCheck, MapPin
+  LogOut, UserCheck, MapPin, Sparkles
 } from 'lucide-react';
 import { Auth, ASSIGNED_LOCALITY, CITY } from '../services/api';
 import IvyLogo from './IvyLogo';
 
-export default function Navbar({ user: propUser, onLogout, onOpenLogin, savedCount }) {
+export default function Navbar({ user: propUser, onLogout, onOpenLogin, onOpenSimulation, savedCount }) {
   const location = useLocation();
   const [localUser, setLocalUser] = useState(Auth.getUser());
   const user = propUser !== undefined ? propUser : localUser;
@@ -57,7 +57,7 @@ export default function Navbar({ user: propUser, onLogout, onOpenLogin, savedCou
       icon: Heart,
       badge: savedCount > 0 ? savedCount : null 
     },
-    { path: '/insights', label: 'Market Intelligence', icon: BarChart3, highlight: true },
+    { path: '/insights', label: 'Insights & Detective Audit', icon: BarChart3, highlight: true },
   ];
 
   return (
@@ -114,6 +114,16 @@ export default function Navbar({ user: propUser, onLogout, onOpenLogin, savedCou
 
           {/* User & Auth Controls */}
           <div className="flex items-center space-x-2 sm:space-x-3">
+            
+            {/* Quick 3D Simulation Launcher matching reference */}
+            <button
+              onClick={onOpenSimulation}
+              className="flex items-center space-x-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-cyan-50 hover:bg-cyan-100 border border-cyan-200 text-[#0018A8] hover:text-blue-900 text-xs font-bold transition-all shadow-2xs hover:shadow-xs cursor-pointer group active:scale-95"
+              title="Launch Bellandur 3D Locality Simulation"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-600 transition-transform group-hover:rotate-12" />
+              <span className="hidden xs:inline font-bold">3D Simulation</span>
+            </button>
             {user ? (
               <div className="flex items-center space-x-2">
                 <div className="hidden sm:flex flex-col items-end px-3 py-1 bg-slate-50 border border-slate-200/80 rounded-xl">

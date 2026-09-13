@@ -8,6 +8,7 @@ import RentalsView from './pages/RentalsView';
 import ProjectsView from './pages/ProjectsView';
 import FavouritesView from './pages/FavouritesView';
 import InsightsView from './pages/InsightsView';
+import BellandurSimulationModal from './components/BellandurSimulationModal';
 import { API, Auth, CITY } from './services/api';
 import { Building2, ExternalLink, ShieldCheck } from 'lucide-react';
 import IvyLogo from './components/IvyLogo';
@@ -15,6 +16,7 @@ import IvyLogo from './components/IvyLogo';
 export default function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [loginInitialEmail, setLoginInitialEmail] = useState('demo1@ivy.homes');
+  const [isSimulationOpen, setIsSimulationOpen] = useState(false);
   const [user, setUser] = useState(Auth.getUser());
   const [savedListings, setSavedListings] = useState([]);
 
@@ -80,6 +82,7 @@ export default function App() {
           user={user}
           onLogout={handleLogout}
           onOpenLogin={handleOpenLogin}
+          onOpenSimulation={() => setIsSimulationOpen(true)}
           savedCount={savedListings.length}
         />
 
@@ -92,6 +95,7 @@ export default function App() {
                 <ListingsView 
                   user={user}
                   onOpenLogin={handleOpenLogin}
+                  onOpenSimulation={() => setIsSimulationOpen(true)}
                   savedListings={savedListings} 
                   onToggleSave={handleToggleSave} 
                 />
@@ -155,6 +159,12 @@ export default function App() {
           initialEmail={loginInitialEmail}
           onClose={() => setIsLoginOpen(false)}
           onLoginSuccess={handleLoginSuccess}
+        />
+
+        {/* 3D Locality Simulation Modal */}
+        <BellandurSimulationModal
+          isOpen={isSimulationOpen}
+          onClose={() => setIsSimulationOpen(false)}
         />
 
         {/* Global Footer */}

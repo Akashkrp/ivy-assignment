@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, SlidersHorizontal, ArrowUpDown, ShieldCheck, 
   Sparkles, AlertTriangle, Filter, RotateCcw, ChevronLeft, ChevronRight,
-  Home, MapPin, Building2, Lock, ArrowRight, Phone
+  Home, MapPin, Building2, Lock, ArrowRight, Phone, Compass
 } from 'lucide-react';
 import { API, ASSIGNED_LOCALITY, CITY } from '../services/api';
 import ListingCard from '../components/ListingCard';
@@ -27,7 +27,7 @@ const FURNISHING_OPTIONS = [
 
 const ITEMS_PER_PAGE = 24;
 
-export default function ListingsView({ user, onOpenLogin, savedListings = [], onToggleSave }) {
+export default function ListingsView({ user, onOpenLogin, onOpenSimulation, savedListings = [], onToggleSave }) {
   const [allListings, setAllListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -243,6 +243,20 @@ export default function ListingsView({ user, onOpenLogin, savedListings = [], on
                 </div>
               </div>
             )}
+
+            {/* Quick 3D Simulation Action Banner */}
+            <div className="pt-2 flex flex-wrap items-center gap-3">
+              <button
+                onClick={onOpenSimulation}
+                className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-cyan-950/40 transition-all cursor-pointer group active:scale-95"
+              >
+                <Compass className="w-4 h-4 text-slate-950 group-hover:rotate-45 transition-transform" />
+                <span>Launch 3D Locality Simulation</span>
+                <span className="text-[10px] bg-slate-950 text-cyan-300 px-1.5 py-0.5 rounded font-mono font-bold">
+                  Bellandur
+                </span>
+              </button>
+            </div>
 
             {/* Proof Metrics Row */}
             <div className="pt-2 flex flex-wrap items-center gap-4 sm:gap-6 text-xs text-slate-200 font-medium">
