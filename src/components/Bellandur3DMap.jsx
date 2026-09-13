@@ -49,9 +49,9 @@ export default function Bellandur3DMap({ onClose, isEmbedded = false }) {
 
         // Filter Bellandur listings + include all anomalies
         const bellandurAll = listings.filter(l => (l.locality || '').toLowerCase().includes('bellandur'));
-        const allCorrupt = listings.filter(l => corruptIds.has(l.listing_id) || l.price < 0 || (l.floor > l.total_floors && l.total_floors > 0) || l.carpet_area > l.super_built_up_area || l.latitude > 50 || l.bedroom === 0);
-        const allBait = listings.filter(l => baitIds.has(l.listing_id) || (l.price > 0 && l.price < 50000));
-        const allValidBellandur = bellandurAll.filter(l => !corruptIds.has(l.listing_id) && !baitIds.has(l.listing_id) && l.price > 50000 && (l.floor <= l.total_floors || l.total_floors === 0));
+        const allCorrupt = listings.filter(l => corruptIds.has(l.listing_id) || l.is_corrupt);
+        const allBait = listings.filter(l => baitIds.has(l.listing_id) || l.is_fake);
+        const allValidBellandur = bellandurAll.filter(l => !corruptIds.has(l.listing_id) && !baitIds.has(l.listing_id) && !l.is_corrupt && !l.is_fake);
 
         // Sample 84 Valid, 5 Corrupt, 11 Bait to match exactly the 100 specimen simulation in the reference screenshot
         const sampledValid = (allValidBellandur.length >= 84 ? allValidBellandur.slice(0, 84) : [

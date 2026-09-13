@@ -39,15 +39,17 @@ export default function ListingDetailView({ user, onOpenLogin, savedListings = [
       setListing(match || null);
 
       if (match) {
-        // Compute comparable listings client-side (since /v1/listings/{id}/similar is 404 missing endpoint)
+        // /v1/listings/{id}/similar is documented but 404s, so the same rule it
+        // describes is applied here: same locality, same bedroom count, price
+        // within 15%.
         const comps = all
-          .filter((l) => 
+          .filter((l) =>
             l.listing_id !== match.listing_id &&
             l.locality?.toLowerCase() === match.locality?.toLowerCase() &&
             l.bedroom === match.bedroom &&
             !l.is_corrupt &&
             !l.is_fake &&
-            Math.abs(l.price - match.price) / (match.price || 1) <= 0.25
+            Math.abs(l.price_inr - match.price_inr) / (match.price_inr || 1) <= 0.15
           )
           .slice(0, 4);
         setSimilar(comps);
@@ -119,22 +121,28 @@ export default function ListingDetailView({ user, onOpenLogin, savedListings = [
 
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 pt-8">
         
-        {/* Anomaly Banner if Corrupt or Fake */}
+        {/* What is wrong with this record, if anything */}
         {(listing.is_corrupt || listing.is_fake) && (
           <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-start space-x-3 text-sm">
             <ShieldAlert className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
             <div>
               <div className="font-bold text-rose-800">
-                Data Anomaly Detected on this Record
+                {listing.is_corrupt ? 'This record describes something that cannot exist' : 'This listing looks like enquiry bait'}
               </div>
-              <p className="text-xs text-rose-700 mt-1 leading-relaxed">
-                {listing.price < 0 && `• Physically impossible negative price: ${formatINR(listing.price)}.`}
-                {listing.floor > listing.total_floors && `• Floor (${listing.floor}) exceeds building's total floors (${listing.total_floors}).`}
-                {listing.carpet_area > listing.super_built_up_area && `• Carpet area (${listing.carpet_area} sqft) exceeds super built-up area (${listing.super_built_up_area} sqft).`}
-                {listing.latitude > 50 && `• Swapped coordinates: Latitude (${listing.latitude}) and Longitude (${listing.longitude}) are inverted.`}
-                {listing.bedroom <= 0 && listing.property_type !== 'plot' && `• Impossible configuration: 0 bedrooms and 0 bathrooms recorded for a residential apartment.`}
-                {listing.is_fake && `• Fraudulent Enquiry Bait: Artificially minuscule sale price (${formatINR(listing.price)}) posted solely to attract leads.`}
-              </p>
+              <ul className="text-xs text-rose-700 mt-1.5 leading-relaxed space-y-1">
+                {listing.defects.map((d) => (
+                  <li key={d.key}>• <strong>{d.label}:</strong> {d.detail}</li>
+                ))}
+                {listing.is_fake && (
+                  <li>
+                    • <strong>Enquiry bait:</strong> asking ₹{listing.price_per_sqft?.toLocaleString('en-IN')}/sqft against a locality
+                    median of ₹{Math.round(listing.locality_market_rate || 0).toLocaleString('en-IN')} for a {listing.bedroom} BHK in{' '}
+                    <span className="capitalize">{listing.locality}</span> &mdash; {((listing.market_rate_ratio || 0) * 100).toFixed(0)}% of
+                    the going rate, while flagged verified and live. The number {listing.posted_by_contact} posts under several different
+                    seller names.
+                  </li>
+                )}
+              </ul>
             </div>
           </div>
         )}
@@ -197,6 +205,11 @@ export default function ListingDetailView({ user, onOpenLogin, savedListings = [
                       Exact: {formatINR(listing.price)}
                     </div>
                   )}
+                  {listing.price_inr !== listing.price && (
+                    <div className="text-xs text-amber-700 font-semibold mt-0.5">
+                      Served in thousands — reads as {formatCrores(listing.price_inr)}
+                    </div>
+                  )}
                 </div>
 
                 {listing.price_per_sqft && (
@@ -211,6 +224,11 @@ export default function ListingDetailView({ user, onOpenLogin, savedListings = [
                     {listing.is_area_converted && (
                       <div className="text-[10px] text-slate-500 mt-0.5 font-medium">
                         Area converted from m² ({listing.raw_carpet_area} m² → {listing.carpet_area} sqft)
+                      </div>
+                    )}
+                    {listing.price_inr !== listing.price && (
+                      <div className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                        Computed from the corrected price
                       </div>
                     )}
                   </div>
@@ -424,7 +442,8 @@ export default function ListingDetailView({ user, onOpenLogin, savedListings = [
                 Comparable Properties in {listing.locality}
               </h2>
               <p className="text-xs text-slate-500 mt-1 font-medium">
-                Client-computed matching bedroom count ({listing.bedroom} BHK) and price within 25% (compensating for missing /similar endpoint).
+                <code className="font-mono">/v1/listings/{'{id}'}/similar</code> is documented but returns 404, so the rule it describes is
+                applied here instead: same locality, same bedroom count ({listing.bedroom} BHK), price within 15%.
               </p>
             </div>
 

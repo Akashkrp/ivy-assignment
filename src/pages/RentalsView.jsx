@@ -66,11 +66,14 @@ export default function RentalsView({ user, onOpenLogin }) {
   const filteredRentals = useMemo(() => {
     return rentals.filter(r => {
       if (search.trim()) {
+        // title is deliberately not searched: its locality disagrees with the
+        // locality field in 1,691 of 1,900 rentals, so matching on it would
+        // return units in the wrong place.
         const q = search.toLowerCase().trim();
-        const matchTitle = (r.title || '').toLowerCase().includes(q);
         const matchApt = (r.apartment_name || '').toLowerCase().includes(q);
         const matchLoc = (r.locality || '').toLowerCase().includes(q);
-        if (!matchTitle && !matchApt && !matchLoc) return false;
+        const matchId = (r.listing_id || '').toLowerCase().includes(q);
+        if (!matchApt && !matchLoc && !matchId) return false;
       }
 
       if (locality !== 'all' && (r.locality || '').toLowerCase().trim() !== locality.toLowerCase()) {
@@ -175,7 +178,7 @@ export default function RentalsView({ user, onOpenLogin }) {
             {/* Search */}
             <div className="lg:col-span-2">
               <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">
-                Search Title or Apartment
+                Search society, locality or id
               </label>
               <div className="relative">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
@@ -285,11 +288,20 @@ export default function RentalsView({ user, onOpenLogin }) {
                       </span>
                     </div>
 
-                    <h3 className="text-base font-bold text-slate-900 line-clamp-1 mb-1 group-hover:text-[#0018A8] transition-colors">
-                      {r.title || `${r.bedroom} BHK in ${r.apartment_name}`}
+                    <h3 className="text-base font-bold text-slate-900 line-clamp-1 mb-1 group-hover:text-[#0018A8] transition-colors capitalize">
+                      {r.bedroom} BHK in {r.apartment_name}, {r.locality}
                     </h3>
-                    <div className="text-xs text-slate-500 mb-4 line-clamp-1 font-medium">
-                      {r.apartment_name}
+                    <div className="text-xs text-slate-500 mb-4 font-medium">
+                      {String(r.title || '').toLowerCase().includes(String(r.locality).toLowerCase()) ? (
+                        <span className="line-clamp-1">{r.title}</span>
+                      ) : (
+                        <span
+                          className="line-clamp-2 text-amber-700"
+                          title="The API's title field names a different locality from the locality field. The description agrees with locality, so the title is the unreliable one."
+                        >
+                          API title says &ldquo;{r.title}&rdquo; &mdash; wrong locality, ignored
+                        </span>
+                      )}
                     </div>
 
                     {/* Pricing Box */}

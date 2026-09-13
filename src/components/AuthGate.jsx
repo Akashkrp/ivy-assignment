@@ -82,7 +82,7 @@ export default function AuthGate({
           <span>·</span>
           <div className="flex items-center space-x-1.5 text-[#0018A8]">
             <Building2 className="w-4 h-4" />
-            <span>3,687 Verified Bangalore Listings</span>
+            <span>Live data pulled from the Ivy Homes API</span>
           </div>
         </div>
 

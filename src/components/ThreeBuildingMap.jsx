@@ -112,7 +112,7 @@ export default function ThreeBuildingMap() {
         const classified = listings.map(l => {
           const id = l.listing_id;
           const isCorrupt = corruptIdsSet.has(id) || l.is_corrupt;
-          const isBait = baitIdsSet.has(id) || (l.price > 0 && l.price <= 500);
+          const isBait = baitIdsSet.has(id) || l.is_fake;
 
           let corruptType = null;
           let anomalyReason = null;
@@ -150,9 +150,8 @@ export default function ThreeBuildingMap() {
         });
 
         // 2. Unclutter by organizing into clean physical complexes and districts
-        // 100% of all 40 corrupt listings
+        // every impossible and every bait record, however many there are
         const corrupts = classified.filter(l => l.status === 'corrupt');
-        // 100% of all 8 bait listings
         const baits = classified.filter(l => l.status === 'bait');
         
         // Clean Bellandur listings: group by complex to avoid multiple overlapping units at identical GPS

@@ -188,7 +188,7 @@ export default function ListingsView({ user, onOpenLogin, onOpenSimulation, save
 
             <p className="text-sm sm:text-base text-slate-300 font-normal leading-relaxed max-w-2xl">
               {user 
-                ? 'Ivy Homes verified property marketplace. Browse 3,687 authenticated Bangalore listings across 11 key localities with real-time valuation intelligence.'
+                ? `Browse ${filteredListings.length.toLocaleString('en-IN')} live Bangalore listings across ${LOCALITIES.length - 1} localities, with the API's unit errors corrected and its impossible and bait records filtered out.`
                 : 'Ivy Homes buys your home directly and handles everything end to end. We offer guaranteed liquidity, zero brokerage, and cash in hand in 60 days.'
               }
             </p>
@@ -225,7 +225,7 @@ export default function ListingsView({ user, onOpenLogin, onOpenSimulation, save
                     onClick={() => onOpenLogin?.()}
                     className="px-6 py-3 rounded-xl bg-[#0018A8] hover:bg-[#001385] text-white font-bold text-sm shadow-md transition-all cursor-pointer inline-flex items-center space-x-2 active:scale-95"
                   >
-                    <span>Sign In to Unlock 3,687 Listings</span>
+                    <span>Sign in to unlock {filteredListings.length.toLocaleString('en-IN')} listings</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -262,7 +262,7 @@ export default function ListingsView({ user, onOpenLogin, onOpenSimulation, save
             <div className="pt-2 flex flex-wrap items-center gap-4 sm:gap-6 text-xs text-slate-200 font-medium">
               <div className="flex items-center space-x-2">
                 <span className="text-base font-black text-white">
-                  {user ? filteredListings.length.toLocaleString() : '3,687'}
+                  {filteredListings.length.toLocaleString('en-IN')}
                 </span>
                 <span className="text-slate-300">Live Listings</span>
               </div>
@@ -302,7 +302,8 @@ export default function ListingsView({ user, onOpenLogin, onOpenSimulation, save
                 Bangalore Property Marketplace Locked
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto leading-relaxed">
-                Directly explore 3,687 verified live properties across 11 Bangalore localities with dual-layer client filtering and real-time valuations.
+                Sign in to explore {filteredListings.length.toLocaleString('en-IN')} live properties across {LOCALITIES.length - 1} Bangalore
+                localities, filtered entirely client-side because the server ignores most of the filters it documents.
               </p>
             </div>
 

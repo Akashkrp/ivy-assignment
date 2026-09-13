@@ -48,10 +48,13 @@ export default function ProjectsView({ user, onOpenLogin }) {
         API.fetchListings()
       ]);
 
-      // Calculate actual live listings per project
+      // Listings actually available in each project. It has to be the live ones:
+      // counting every retrievable listing reproduces total_listings for only 128
+      // projects, while counting live ones reproduces it exactly for 393, which is
+      // what identifies is_live as the basis the field is computed on.
       const counts = {};
       lData.forEach((l) => {
-        if (l.project_id) {
+        if (l.project_id && l.is_live) {
           counts[l.project_id] = (counts[l.project_id] || 0) + 1;
         }
       });
@@ -162,9 +165,9 @@ export default function ProjectsView({ user, onOpenLogin }) {
           {/* Quick Stats Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs">
-              <div className="text-xs text-slate-500 font-semibold">Total Projects</div>
+              <div className="text-xs text-slate-500 font-semibold">Projects retrieved</div>
               <div className="text-2xl font-black text-slate-900 mt-1">{projects.length}</div>
-              <div className="text-[10px] text-slate-400">API Documented: 476</div>
+              <div className="text-[10px] text-slate-400">The envelope reports total: 476</div>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs">
@@ -180,9 +183,11 @@ export default function ProjectsView({ user, onOpenLogin }) {
             </div>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs">
-              <div className="text-xs text-slate-500 font-semibold">RERA Registration</div>
-              <div className="text-2xl font-black text-emerald-600 mt-1">100%</div>
-              <div className="text-[10px] text-slate-400">Karnataka RERA compliant</div>
+              <div className="text-xs text-slate-500 font-semibold">RERA number present</div>
+              <div className="text-2xl font-black text-emerald-600 mt-1">
+                {Math.round((100 * projects.filter(p => p.rera_number).length) / (projects.length || 1))}%
+              </div>
+              <div className="text-[10px] text-slate-400">{projects.filter(p => p.rera_number).length} of {projects.length} projects</div>
             </div>
           </div>
 
@@ -344,7 +349,7 @@ export default function ProjectsView({ user, onOpenLogin }) {
                       {hasWrongCount ? (
                         <span 
                           className="flex items-center space-x-1 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full font-medium" 
-                          title={`API field reports ${p.total_listings}, but active verified listings in database is ${actualLive}.`}
+                          title={`total_listings reports ${p.total_listings}; the project actually has ${actualLive} live listings.`}
                         >
                           <AlertCircle className="w-3 h-3 text-amber-600" />
                           <span>Reports {p.total_listings} · Live {actualLive}</span>
