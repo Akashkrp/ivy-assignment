@@ -206,6 +206,23 @@ export default function ListingCard({ listing, isSaved, onToggleSave }) {
                 <span>{listing.carpet_area ? `${listing.carpet_area} sqft` : '-'}</span>
               </div>
             </div>
+
+            {/* Representative info if present */}
+            {(listing.posted_by_name || listing.posted_by_contact) && (
+              <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+                {listing.posted_by_name && (
+                  <span className="truncate">
+                    <span className="text-slate-400">Rep:</span>{' '}
+                    <strong className="text-slate-700 font-medium">{listing.posted_by_name}</strong>
+                  </span>
+                )}
+                {listing.posted_by_contact && (
+                  <span className="font-mono text-[10px] text-slate-500 shrink-0 ml-2">
+                    {listing.posted_by_contact}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Card Footer */}

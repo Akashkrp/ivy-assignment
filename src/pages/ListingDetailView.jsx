@@ -3,7 +3,8 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Heart, MapPin, Building2, BedDouble, Bath, 
   Maximize2, Compass, Layers, Car, ShieldCheck, ShieldAlert,
-  Calendar, ExternalLink, CheckCircle2, AlertTriangle, Armchair
+  Calendar, ExternalLink, CheckCircle2, AlertTriangle, Armchair,
+  User, Phone
 } from 'lucide-react';
 import { API, formatCrores, formatINR } from '../services/api';
 import ListingCard from '../components/ListingCard';
@@ -354,6 +355,63 @@ export default function ListingDetailView({ user, onOpenLogin, savedListings = [
 
           {/* Sidebar (Ivy Homes Direct Assurance & Verified Metadata) */}
           <div className="space-y-6">
+
+            {/* Listing Representation Card */}
+            {(listing.posted_by_name || listing.posted_by || listing.posted_by_contact) && (
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                <div className="flex items-center space-x-2.5 mb-4">
+                  <User className="w-5 h-5 text-[#0018A8]" />
+                  <h3 className="text-base font-bold text-slate-900 leading-tight">Listing Representation</h3>
+                </div>
+
+                <div className="space-y-2.5 text-sm">
+                  {listing.posted_by_name && (
+                    <div>
+                      <span className="font-bold text-slate-900">Representative:</span>{' '}
+                      <span className="text-slate-700 font-medium">{listing.posted_by_name}</span>
+                    </div>
+                  )}
+
+                  {listing.posted_by && (
+                    <div>
+                      <span className="font-bold text-slate-900">Role:</span>{' '}
+                      <span className="text-slate-700 font-medium capitalize">{listing.posted_by}</span>
+                    </div>
+                  )}
+
+                  {listing.posted_by_contact && (
+                    <div className="flex items-center space-x-1.5">
+                      <span className="font-bold text-slate-900">Phone:</span>{' '}
+                      <a 
+                        href={`tel:${listing.posted_by_contact}`}
+                        className="text-[#0018A8] hover:underline font-mono font-medium flex items-center space-x-1"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-[#0018A8]" />
+                        <span>{listing.posted_by_contact}</span>
+                      </a>
+                    </div>
+                  )}
+
+                  {listing.website && (
+                    <div className="text-xs text-slate-600 leading-relaxed pt-0.5">
+                      <span className="font-bold text-slate-900 text-sm">Channel:</span>{' '}
+                      <span className="text-slate-600">
+                        {listing.is_verified ? 'Verified Direct Listing' : 'Direct Listing'} via{' '}
+                        <span className="capitalize font-semibold text-slate-800">{listing.website}</span>
+                        {listing.city_id === 1 ? ' Bangalore' : ''}
+                      </span>
+                    </div>
+                  )}
+
+                  {listing.posted_at && (
+                    <div className="flex items-center space-x-1.5 text-xs text-slate-500 pt-3 border-t border-slate-100">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span>Posted on {new Date(listing.posted_at).toLocaleDateString('en-US')}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             
             {/* Ivy Direct Purchase & Advisory Card */}
             <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">

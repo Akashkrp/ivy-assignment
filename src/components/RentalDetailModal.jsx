@@ -2,7 +2,8 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, KeyRound, MapPin, BedDouble, Bath, Maximize2, 
-  Building2, Compass, ShieldCheck, ExternalLink, Armchair
+  Building2, Compass, ShieldCheck, ExternalLink, Armchair,
+  User, Phone, Calendar
 } from 'lucide-react';
 import { formatINR } from '../services/api';
 
@@ -142,6 +143,56 @@ export default function RentalDetailModal({ rental, onClose }) {
               <p className="text-xs sm:text-sm text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-200 whitespace-pre-line">
                 {rental.description}
               </p>
+            </div>
+          )}
+
+          {/* Listing Representation Card */}
+          {(rental.posted_by_name || rental.posted_by || rental.posted_by_contact) && (
+            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 mb-6">
+              <div className="flex items-center space-x-2 mb-3">
+                <User className="w-4 h-4 text-[#0018A8]" />
+                <h4 className="text-sm font-bold text-slate-900">Listing Representation</h4>
+              </div>
+              <div className="space-y-2 text-xs sm:text-sm">
+                {rental.posted_by_name && (
+                  <div>
+                    <span className="font-bold text-slate-900">Representative:</span>{' '}
+                    <span className="text-slate-700 font-medium">{rental.posted_by_name}</span>
+                  </div>
+                )}
+                {rental.posted_by && (
+                  <div>
+                    <span className="font-bold text-slate-900">Role:</span>{' '}
+                    <span className="text-slate-700 font-medium capitalize">{rental.posted_by}</span>
+                  </div>
+                )}
+                {rental.posted_by_contact && (
+                  <div className="flex items-center space-x-1.5">
+                    <span className="font-bold text-slate-900">Phone:</span>{' '}
+                    <a 
+                      href={`tel:${rental.posted_by_contact}`} 
+                      className="text-[#0018A8] hover:underline font-mono font-medium flex items-center space-x-1"
+                    >
+                      <Phone className="w-3 h-3 text-[#0018A8]" />
+                      <span>{rental.posted_by_contact}</span>
+                    </a>
+                  </div>
+                )}
+                {rental.website && (
+                  <div className="text-xs text-slate-600 pt-0.5">
+                    <span className="font-bold text-slate-900 text-xs sm:text-sm">Channel:</span>{' '}
+                    <span className="text-slate-600">
+                      Direct Rental via <span className="capitalize font-semibold text-slate-800">{rental.website}</span> (Bangalore)
+                    </span>
+                  </div>
+                )}
+                {rental.posted_at && (
+                  <div className="flex items-center space-x-1.5 text-xs text-slate-500 pt-2 border-t border-slate-200 mt-2">
+                    <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>Posted on {new Date(rental.posted_at).toLocaleDateString('en-US')}</span>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
